@@ -14,7 +14,111 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          default_price_source: string
+          id: string
+          preferred_currency: string
+          updated_at: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          default_price_source?: string
+          id?: string
+          preferred_currency?: string
+          updated_at?: string
+          user_id: string
+          username?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          default_price_source?: string
+          id?: string
+          preferred_currency?: string
+          updated_at?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      user_cards: {
+        Row: {
+          acquired_at: string
+          api_card_id: string
+          card_era: string
+          card_image: string
+          card_name: string
+          card_number: string
+          card_rarity: string
+          card_set: string
+          condition: string
+          created_at: string
+          estimated_price: number
+          finish: string
+          grade: number | null
+          grading_company: string | null
+          id: string
+          is_graded: boolean
+          language: string
+          price_change: number
+          purchase_price: number | null
+          region: string
+          user_id: string
+        }
+        Insert: {
+          acquired_at?: string
+          api_card_id: string
+          card_era?: string
+          card_image?: string
+          card_name: string
+          card_number?: string
+          card_rarity?: string
+          card_set?: string
+          condition?: string
+          created_at?: string
+          estimated_price?: number
+          finish?: string
+          grade?: number | null
+          grading_company?: string | null
+          id?: string
+          is_graded?: boolean
+          language?: string
+          price_change?: number
+          purchase_price?: number | null
+          region?: string
+          user_id: string
+        }
+        Update: {
+          acquired_at?: string
+          api_card_id?: string
+          card_era?: string
+          card_image?: string
+          card_name?: string
+          card_number?: string
+          card_rarity?: string
+          card_set?: string
+          condition?: string
+          created_at?: string
+          estimated_price?: number
+          finish?: string
+          grade?: number | null
+          grading_company?: string | null
+          id?: string
+          is_graded?: boolean
+          language?: string
+          price_change?: number
+          purchase_price?: number | null
+          region?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
