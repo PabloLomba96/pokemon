@@ -109,7 +109,7 @@ export function PriceHistoryChart({ basePrice, priceChange }: PriceHistoryChartP
                 color: "oklch(0.93 0.01 260)",
                 fontSize: "12px",
               }}
-              formatter={(value: number) => [`${sym}${formatNum(value)}`, "Precio"]}
+              formatter={(value) => [`${sym}${formatNum(Number(value))}`, "Precio"]}
             />
             <Area
               type="monotone"
