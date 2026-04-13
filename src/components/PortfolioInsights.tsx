@@ -70,7 +70,7 @@ export function PortfolioInsights({ cards }: PortfolioInsightsProps) {
                     color: "hsl(var(--foreground))",
                     fontSize: "12px",
                   }}
-                  formatter={(value: number) => [`${sym}${formatNum(value)}`, "Valor"]}
+                  formatter={(value) => [`${sym}${formatNum(Number(value))}`, "Valor"]}
                 />
               </PieChart>
             </ResponsiveContainer>
