@@ -94,7 +94,7 @@ export function CardDetail({ card, onClose, onAddToCollection }: CardDetailProps
                 animate={{ scale: 1, opacity: 1 }}
                 className="text-4xl font-bold text-neon-gold text-glow-gold"
               >
-                €{currentPrice.toLocaleString()}
+                €{currentPrice.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
               </motion.p>
               <div className={`flex items-center gap-1 mt-1 text-sm font-medium ${card.priceChange >= 0 ? "text-price-up" : "text-price-down"}`}>
                 {card.priceChange >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}

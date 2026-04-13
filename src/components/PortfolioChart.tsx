@@ -32,7 +32,7 @@ export function PortfolioChart() {
                 borderRadius: "8px",
                 color: "oklch(0.93 0.01 260)",
               }}
-              formatter={(value) => [`€${Number(value).toLocaleString()}`, "Valor"]}
+              formatter={(value) => [`€${Number(value).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`, "Valor"]}
             />
             <Area
               type="monotone"
