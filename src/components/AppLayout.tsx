@@ -10,6 +10,8 @@ import { AddCardPanel } from "./AddCardPanel";
 import { SearchBar } from "./SearchBar";
 import { AuthPage } from "./AuthPage";
 import { ProfilePage } from "./ProfilePage";
+import { ComingSoonPage } from "./ComingSoonPage";
+import { EmptyState } from "./EmptyState";
 import { useAppStore } from "../store/useAppStore";
 import type { PokemonCard, CardRegion } from "../data/mockData";
 import { catalogCards, regions } from "../data/mockData";
@@ -50,6 +52,8 @@ export function AppLayout() {
     setAddingCard(null);
   };
 
+  const comingSoonViews = ["marketplace", "packs", "accessories", "trades"];
+
   return (
     <div className="flex min-h-screen bg-background">
       <AppSidebar
@@ -76,7 +80,7 @@ export function AppLayout() {
                   <h1 className="text-lg font-bold text-foreground">Mi Dashboard</h1>
                 </div>
               </header>
-              <Dashboard collection={collection} />
+              <Dashboard collection={collection} onNavigate={setActiveView} />
             </motion.div>
           )}
 
@@ -106,48 +110,58 @@ export function AppLayout() {
               </header>
 
               <div className="p-6">
-                <div className="flex items-center gap-2 flex-wrap mb-6">
-                  <Filter className="w-4 h-4 text-muted-foreground" />
-                  <button
-                    onClick={() => setCollectionRegion("all")}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                      collectionRegion === "all"
-                        ? "bg-primary/20 text-primary border border-primary/40"
-                        : "bg-accent text-muted-foreground border border-border hover:border-primary/20"
-                    }`}
-                  >🌐 Todas</button>
-                  {regions.map((r) => (
-                    <button
-                      key={r.id}
-                      onClick={() => setCollectionRegion(r.id)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                        collectionRegion === r.id
-                          ? "bg-primary/20 text-primary border border-primary/40"
-                          : "bg-accent text-muted-foreground border border-border hover:border-primary/20"
-                      }`}
-                    >
-                      {r.flag} {r.label}
-                    </button>
-                  ))}
-                </div>
-
-                {filteredCollection.length > 0 ? (
-                  <AnimatePresence mode="wait">
-                    {collectionViewMode === "grid" ? (
-                      <motion.div key="grid" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                        <CardGrid cards={filteredCollection} onSelectCard={setSelectedCard} />
-                      </motion.div>
-                    ) : (
-                      <motion.div key="table" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                        <CollectionTableView cards={filteredCollection} onSelectCard={setSelectedCard} />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                {collection.length === 0 ? (
+                  <EmptyState
+                    title="Tu colección está vacía"
+                    message="Aún no has añadido ninguna carta. Explora el catálogo y empieza a construir tu legado TCG."
+                    ctaLabel="Explorar Catálogo"
+                    onCta={() => setActiveView("explore")}
+                  />
                 ) : (
-                  <div className="text-center py-20">
-                    <p className="text-lg font-semibold text-foreground mb-2">Sin cartas aún</p>
-                    <p className="text-sm text-muted-foreground">Ve a Explorar para descubrir y añadir cartas a tu colección.</p>
-                  </div>
+                  <>
+                    <div className="flex items-center gap-2 flex-wrap mb-6">
+                      <Filter className="w-4 h-4 text-muted-foreground" />
+                      <button
+                        onClick={() => setCollectionRegion("all")}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                          collectionRegion === "all"
+                            ? "bg-primary/20 text-primary border border-primary/40"
+                            : "bg-accent text-muted-foreground border border-border hover:border-primary/20"
+                        }`}
+                      >🌐 Todas</button>
+                      {regions.map((r) => (
+                        <button
+                          key={r.id}
+                          onClick={() => setCollectionRegion(r.id)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                            collectionRegion === r.id
+                              ? "bg-primary/20 text-primary border border-primary/40"
+                              : "bg-accent text-muted-foreground border border-border hover:border-primary/20"
+                          }`}
+                        >
+                          {r.flag} {r.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {filteredCollection.length > 0 ? (
+                      <AnimatePresence mode="wait">
+                        {collectionViewMode === "grid" ? (
+                          <motion.div key="grid" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                            <CardGrid cards={filteredCollection} onSelectCard={setSelectedCard} />
+                          </motion.div>
+                        ) : (
+                          <motion.div key="table" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                            <CollectionTableView cards={filteredCollection} onSelectCard={setSelectedCard} />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    ) : (
+                      <div className="text-center py-16">
+                        <p className="text-muted-foreground">No hay cartas en esta región.</p>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </motion.div>
@@ -174,6 +188,25 @@ export function AppLayout() {
                 </div>
               </header>
               <ProfilePage />
+            </motion.div>
+          )}
+
+          {comingSoonViews.includes(activeView) && (
+            <motion.div key="coming-soon" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <ComingSoonPage
+                title={
+                  activeView === "marketplace" ? "El Marketplace P2P está en camino"
+                  : activeView === "packs" ? "Sobres y Cajas próximamente"
+                  : activeView === "accessories" ? "Accesorios y Protección llegando pronto"
+                  : "Intercambios entre coleccionistas"
+                }
+                subtitle={
+                  activeView === "marketplace" ? "Compra y vende cartas directamente con otros coleccionistas europeos, con total transparencia de precios."
+                  : activeView === "packs" ? "Abre sobres virtuales, gestiona tu inventario de producto sellado y trackea su valor en tiempo real."
+                  : activeView === "accessories" ? "Fundas, carpetas, toploaders y todo lo que necesitas para proteger tu inversión."
+                  : "Propón intercambios justos basados en precios de mercado y completa tu colección."
+                }
+              />
             </motion.div>
           )}
         </AnimatePresence>

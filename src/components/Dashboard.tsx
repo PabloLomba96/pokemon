@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Wallet, Layers, Crown, Settings2, Eye, EyeOff, ChevronUp, ChevronDown, Package } from "lucide-react";
+import { Wallet, Layers, Crown, Settings2, Eye, EyeOff, ChevronUp, ChevronDown, Package, Compass } from "lucide-react";
 import type { PokemonCard } from "../data/mockData";
-import { regions } from "../data/mockData";
 import { MetricCard } from "./MetricCard";
 import { PortfolioChart } from "./PortfolioChart";
 import { CardCarousel } from "./CardCarousel";
@@ -10,17 +9,22 @@ import { TopCardsWidget } from "./TopCardsWidget";
 import { RegionBreakdown } from "./RegionBreakdown";
 import { CardDetail } from "./CardDetail";
 import { CardGrid } from "./CardGrid";
+import { EmptyState } from "./EmptyState";
 import { useDashboardWidgets } from "../hooks/useDashboardWidgets";
 import type { WidgetType } from "../hooks/useDashboardWidgets";
+import { useAppStore } from "../store/useAppStore";
 
 interface DashboardProps {
   collection: PokemonCard[];
+  onNavigate?: (view: string) => void;
 }
 
-export function Dashboard({ collection }: DashboardProps) {
+export function Dashboard({ collection, onNavigate }: DashboardProps) {
   const [selectedCard, setSelectedCard] = useState<PokemonCard | null>(null);
   const [showCustomize, setShowCustomize] = useState(false);
   const { widgets, toggleWidget, moveWidget } = useDashboardWidgets();
+  const { preferences } = useAppStore();
+  const sym = preferences.currencySymbol;
 
   const formatNumber = (n: number) => n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
   const totalValue = collection.reduce((sum, c) => sum + c.estimatedPrice, 0);
@@ -29,12 +33,26 @@ export function Dashboard({ collection }: DashboardProps) {
     : null;
   const recentCards = [...collection].sort((a, b) => b.dateAdded.localeCompare(a.dateAdded)).slice(0, 6);
 
+  // If collection is empty, show premium empty state
+  if (collection.length === 0) {
+    return (
+      <div className="p-6">
+        <EmptyState
+          title="Tu bóveda está vacía"
+          message="Empieza tu legado TCG. Explora el catálogo, descubre cartas icónicas y construye un portafolio envidiable."
+          ctaLabel="Ir a Explorar"
+          onCta={() => onNavigate?.("explore")}
+        />
+      </div>
+    );
+  }
+
   const renderWidget = (type: WidgetType) => {
     switch (type) {
       case "metrics":
         return (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <MetricCard title="Valor Total" value={collection.length > 0 ? `€${formatNumber(totalValue)}` : "€0"} change={collection.length > 0 ? 5.8 : undefined} icon={Wallet} accentClass="text-neon-gold" glowClass="glow-gold" />
+            <MetricCard title="Valor Total" value={`${sym}${formatNumber(totalValue)}`} change={5.8} icon={Wallet} accentClass="text-neon-gold" glowClass="glow-gold" />
             <MetricCard title="Cartas Totales" value={collection.length.toString()} icon={Layers} accentClass="text-neon-emerald" glowClass="glow-emerald" />
             <MetricCard title="Top Carta" value={topCard?.name ?? "—"} change={topCard?.priceChange} icon={Crown} accentClass="text-primary" glowClass="glow-purple" />
           </div>
@@ -66,15 +84,7 @@ export function Dashboard({ collection }: DashboardProps) {
         return (
           <div>
             <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Añadidas Recientemente</h3>
-            {recentCards.length > 0 ? (
-              <CardGrid cards={recentCards} onSelectCard={setSelectedCard} />
-            ) : (
-              <div className="text-center py-8 gradient-card rounded-xl">
-                <Package className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                <p className="text-sm text-muted-foreground">Tu colección está vacía.</p>
-                <p className="text-xs text-muted-foreground mt-1">Ve a Explorar para añadir tus primeras cartas.</p>
-              </div>
-            )}
+            <CardGrid cards={recentCards} onSelectCard={setSelectedCard} />
           </div>
         );
       default:
@@ -131,14 +141,6 @@ export function Dashboard({ collection }: DashboardProps) {
       </AnimatePresence>
 
       {/* Widgets */}
-      {collection.length === 0 && !widgets.find(w => w.type === "metrics")?.enabled && (
-        <div className="text-center py-16 gradient-card rounded-xl">
-          <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <h2 className="text-lg font-semibold text-foreground mb-2">Tu colección está vacía</h2>
-          <p className="text-sm text-muted-foreground">Ve a la sección Explorar para descubrir y añadir cartas.</p>
-        </div>
-      )}
-
       {widgets.filter(w => w.enabled).map((w) => (
         <motion.div key={w.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
           {renderWidget(w.type)}
