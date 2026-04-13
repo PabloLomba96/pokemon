@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Wallet, Layers, Crown, Plus } from "lucide-react";
-import { mockCards } from "../data/mockData";
-import type { PokemonCard } from "../data/mockData";
+import { mockCards, regions } from "../data/mockData";
+import type { PokemonCard, CardRegion } from "../data/mockData";
 import { AppSidebar } from "./AppSidebar";
 import { MetricCard } from "./MetricCard";
 import { PortfolioChart } from "./PortfolioChart";
@@ -16,10 +16,17 @@ export function Dashboard() {
   const [selectedCard, setSelectedCard] = useState<PokemonCard | null>(null);
   const [showAddPanel, setShowAddPanel] = useState(false);
   const [addingCardName, setAddingCardName] = useState("");
+  const [activeRegion, setActiveRegion] = useState<CardRegion | "all">("all");
 
-const totalValue = mockCards.reduce((sum, c) => sum + c.estimatedPrice, 0);
+  const filteredCards = activeRegion === "all"
+    ? mockCards
+    : mockCards.filter((c) => c.region === activeRegion);
+
   const formatNumber = (n: number) => n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  const topCard = mockCards.reduce((top, c) => (c.estimatedPrice > top.estimatedPrice ? c : top), mockCards[0]);
+  const totalValue = filteredCards.reduce((sum, c) => sum + c.estimatedPrice, 0);
+  const topCard = filteredCards.length > 0
+    ? filteredCards.reduce((top, c) => (c.estimatedPrice > top.estimatedPrice ? c : top), filteredCards[0])
+    : null;
 
   const handleAddToCollection = () => {
     if (selectedCard) {
@@ -56,6 +63,38 @@ const totalValue = mockCards.reduce((sum, c) => sum + c.estimatedPrice, 0);
         </header>
 
         <div className="p-6 space-y-6">
+          {/* Region Filter */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mr-1">Región:</span>
+            <button
+              onClick={() => setActiveRegion("all")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                activeRegion === "all"
+                  ? "bg-primary/20 text-primary border border-primary/40"
+                  : "bg-accent text-muted-foreground border border-border hover:border-primary/20"
+              }`}
+            >
+              🌐 Todas
+            </button>
+            {regions.map((r) => {
+              const count = mockCards.filter((c) => c.region === r.id).length;
+              return (
+                <button
+                  key={r.id}
+                  onClick={() => setActiveRegion(r.id)}
+                  title={r.description}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    activeRegion === r.id
+                      ? "bg-primary/20 text-primary border border-primary/40"
+                      : "bg-accent text-muted-foreground border border-border hover:border-primary/20"
+                  }`}
+                >
+                  {r.flag} {r.label} <span className="opacity-60">({count})</span>
+                </button>
+              );
+            })}
+          </div>
+
           {/* Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <MetricCard
@@ -68,15 +107,15 @@ const totalValue = mockCards.reduce((sum, c) => sum + c.estimatedPrice, 0);
             />
             <MetricCard
               title="Cartas Totales"
-              value={mockCards.length.toString()}
+              value={filteredCards.length.toString()}
               icon={Layers}
               accentClass="text-neon-emerald"
               glowClass="glow-emerald"
             />
             <MetricCard
               title="Top Carta"
-              value={topCard.name}
-              change={topCard.priceChange}
+              value={topCard?.name ?? "—"}
+              change={topCard?.priceChange}
               icon={Crown}
               accentClass="text-primary"
               glowClass="glow-purple"
@@ -89,9 +128,9 @@ const totalValue = mockCards.reduce((sum, c) => sum + c.estimatedPrice, 0);
           {/* Cards grid */}
           <div>
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-              Tu Colección
+              Tu Colección {activeRegion !== "all" && `— ${regions.find(r => r.id === activeRegion)?.label}`}
             </h2>
-            <CardGrid cards={mockCards} onSelectCard={setSelectedCard} />
+            <CardGrid cards={filteredCards} onSelectCard={setSelectedCard} />
           </div>
         </div>
       </main>
