@@ -16,6 +16,7 @@ export interface PokemonCard {
   setCode: string;
   number: string;
   rarity: string;
+  era: string;
   image: string;
   condition: string;
   language: string;
