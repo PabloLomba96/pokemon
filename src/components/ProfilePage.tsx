@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { User, CreditCard, Gauge, Crown, Save, Check } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import type { CurrencyCode, PriceEngine } from "../store/useAppStore";
+import { supabase } from "../integrations/supabase/client";
 import { toast } from "sonner";
 
 const currencies: { code: CurrencyCode; label: string; symbol: string }[] = [
@@ -17,18 +18,57 @@ const priceEngines: { id: PriceEngine; label: string; description: string }[] = 
 ];
 
 export function ProfilePage() {
-  const { preferences, setCurrency, setPriceEngine, setDisplayName, collection } = useAppStore();
+  const { preferences, setCurrency, setPriceEngine, setDisplayName, collection, userId } = useAppStore();
   const [name, setName] = useState(preferences.displayName);
+  const [email, setEmail] = useState("");
   const [saved, setSaved] = useState(false);
 
   const totalValue = collection.reduce((sum, c) => sum + c.estimatedPrice, 0);
   const formatNum = (n: number) => n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 
-  const handleSave = () => {
+  // Load profile from DB
+  useEffect(() => {
+    if (!userId) return;
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user?.email) setEmail(data.user.email);
+    });
+    supabase.from("profiles").select("*").eq("user_id", userId).single().then(({ data }) => {
+      if (data) {
+        if (data.username) setName(data.username);
+        if (data.preferred_currency) setCurrency(data.preferred_currency as CurrencyCode);
+        if (data.default_price_source) setPriceEngine(data.default_price_source as PriceEngine);
+      }
+    });
+  }, [userId]);
+
+  const handleSave = async () => {
     setDisplayName(name);
+    if (userId) {
+      await supabase.from("profiles").update({
+        username: name,
+        preferred_currency: preferences.currency,
+        default_price_source: preferences.priceEngine,
+      }).eq("user_id", userId);
+    }
     setSaved(true);
-    toast.success("Preferencias guardadas correctamente");
+    toast.success("Preferencias guardadas en tu cuenta");
     setTimeout(() => setSaved(false), 2000);
+  };
+
+  const handleCurrencyChange = async (code: CurrencyCode) => {
+    setCurrency(code);
+    if (userId) {
+      await supabase.from("profiles").update({ preferred_currency: code }).eq("user_id", userId);
+    }
+    toast(`Moneda cambiada a ${code === "EUR" ? "Euro" : "US Dollar"}`);
+  };
+
+  const handleEngineChange = async (engine: PriceEngine) => {
+    setPriceEngine(engine);
+    if (userId) {
+      await supabase.from("profiles").update({ default_price_source: engine }).eq("user_id", userId);
+    }
+    toast(`Motor de precio: ${priceEngines.find(e => e.id === engine)?.label}`);
   };
 
   return (
@@ -48,14 +88,12 @@ export function ProfilePage() {
               <User className="w-8 h-8 text-primary" />
             </div>
             <div className="flex-1">
-              <div className="flex items-center gap-3">
-                <input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="text-xl font-bold text-foreground bg-transparent border-b border-transparent focus:border-primary/50 outline-none transition-colors"
-                />
-              </div>
-              <p className="text-sm text-muted-foreground">{preferences.email}</p>
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="text-xl font-bold text-foreground bg-transparent border-b border-transparent focus:border-primary/50 outline-none transition-colors"
+              />
+              <p className="text-sm text-muted-foreground">{email}</p>
             </div>
             <div className="text-right">
               <p className="text-xs text-muted-foreground uppercase tracking-wider">Valor Total</p>
@@ -77,8 +115,8 @@ export function ProfilePage() {
             {currencies.map((c) => (
               <button
                 key={c.code}
-                onClick={() => { setCurrency(c.code); toast(`Moneda cambiada a ${c.label}`); }}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-lg border transition-all cursor-pointer ${
+                onClick={() => handleCurrencyChange(c.code)}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-lg border transition-all cursor-pointer active:scale-95 ${
                   preferences.currency === c.code
                     ? "border-primary/40 bg-primary/10 text-primary"
                     : "border-border bg-accent/20 text-muted-foreground hover:border-primary/20"
@@ -91,7 +129,7 @@ export function ProfilePage() {
           </div>
         </motion.div>
 
-        {/* Price engine selector */}
+        {/* Price engine */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
           className="gradient-card rounded-xl p-6 space-y-4"
         >
@@ -103,8 +141,8 @@ export function ProfilePage() {
             {priceEngines.map((e) => (
               <button
                 key={e.id}
-                onClick={() => { setPriceEngine(e.id); toast(`Motor de precio: ${e.label}`); }}
-                className={`w-full text-left px-4 py-3 rounded-lg border transition-all cursor-pointer ${
+                onClick={() => handleEngineChange(e.id)}
+                className={`w-full text-left px-4 py-3 rounded-lg border transition-all cursor-pointer active:scale-95 ${
                   preferences.priceEngine === e.id
                     ? "border-neon-emerald/40 bg-neon-emerald/10"
                     : "border-border bg-accent/20 hover:border-neon-emerald/20"
@@ -145,20 +183,18 @@ export function ProfilePage() {
           </div>
         </motion.div>
 
-        {/* Save button */}
+        {/* Save */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
           className="gradient-card rounded-xl p-6 flex items-center justify-between"
         >
           <div>
             <p className="text-sm font-semibold text-foreground">Guardar cambios</p>
-            <p className="text-xs text-muted-foreground">Nombre y preferencias se guardan automáticamente</p>
+            <p className="text-xs text-muted-foreground">Nombre y preferencias se guardan en tu cuenta</p>
           </div>
           <button
             onClick={handleSave}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all cursor-pointer ${
-              saved
-                ? "bg-price-up text-foreground"
-                : "bg-primary text-primary-foreground hover:bg-primary/90 glow-purple"
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all cursor-pointer active:scale-95 ${
+              saved ? "bg-price-up text-foreground" : "bg-primary text-primary-foreground hover:bg-primary/90 glow-purple"
             }`}
           >
             {saved ? <><Check className="w-4 h-4" /> Guardado</> : <><Save className="w-4 h-4" /> Guardar</>}
