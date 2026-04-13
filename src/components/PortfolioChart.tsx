@@ -1,8 +1,12 @@
 import { motion } from "framer-motion";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { portfolioHistory } from "../data/mockData";
+import { useAppStore } from "../store/useAppStore";
 
 export function PortfolioChart() {
+  const { preferences } = useAppStore();
+  const sym = preferences.currencySymbol;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -24,7 +28,7 @@ export function PortfolioChart() {
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.25 0.02 260)" />
             <XAxis dataKey="month" stroke="oklch(0.5 0.02 260)" fontSize={12} />
-            <YAxis stroke="oklch(0.5 0.02 260)" fontSize={12} tickFormatter={(v) => `€${(v / 1000).toFixed(0)}k`} />
+            <YAxis stroke="oklch(0.5 0.02 260)" fontSize={12} tickFormatter={(v) => `${sym}${(v / 1000).toFixed(0)}k`} />
             <Tooltip
               contentStyle={{
                 backgroundColor: "oklch(0.17 0.02 260)",
@@ -32,7 +36,7 @@ export function PortfolioChart() {
                 borderRadius: "8px",
                 color: "oklch(0.93 0.01 260)",
               }}
-              formatter={(value) => [`€${Number(value).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`, "Valor"]}
+              formatter={(value) => [`${sym}${Number(value).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`, "Valor"]}
             />
             <Area
               type="monotone"

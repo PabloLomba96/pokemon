@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Info, Lock } from "lucide-react";
+import { useAppStore } from "../store/useAppStore";
 
 interface PriceSource {
   id: string;
@@ -19,6 +20,9 @@ interface PriceSourcePanelProps {
 }
 
 export function PriceSourcePanel({ tcgPrice, cardmarketPrice, ebayPrice, onPriceChange }: PriceSourcePanelProps) {
+  const { preferences } = useAppStore();
+  const sym = preferences.currencySymbol;
+
   const sources: PriceSource[] = [
     { id: "tcg", label: "Pokémon TCG API", price: tcgPrice, tooltip: "Datos proporcionados por Pokémon TCG API. Actualizado hace 2h", defaultOn: true },
     { id: "cardmarket", label: "Cardmarket", price: cardmarketPrice, tooltip: "Datos proporcionados por Cardmarket (Europa). Actualizado hace 1h", defaultOn: true },
@@ -100,7 +104,7 @@ export function PriceSourcePanel({ tcgPrice, cardmarketPrice, ebayPrice, onPrice
                 exit={{ opacity: 0, scale: 0.8 }}
                 className="text-sm font-semibold text-neon-gold"
               >
-                €{src.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+                {sym}{src.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
               </motion.span>
             )}
           </AnimatePresence>
