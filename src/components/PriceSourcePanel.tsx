@@ -96,15 +96,18 @@ export function PriceSourcePanel({ tcgPrice, cardmarketPrice, ebayPrice, onPrice
             </div>
           </div>
           <AnimatePresence mode="wait">
-            {src.price !== null && !src.locked && (
+            {!src.locked && (
               <motion.span
                 key={active[src.id] ? "on" : "off"}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: active[src.id] ? 1 : 0.3, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
-                className="text-sm font-semibold text-neon-gold"
+                className={`text-sm font-semibold ${src.price !== null ? "text-neon-gold" : "text-muted-foreground italic"}`}
               >
-                {sym}{src.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+                {src.price !== null
+                  ? `${sym}${src.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`
+                  : "No disponible"
+                }
               </motion.span>
             )}
           </AnimatePresence>
