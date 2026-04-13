@@ -24,7 +24,7 @@ export function CollectionTableView({ cards, onSelectCard }: CollectionTableView
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="gradient-card rounded-xl overflow-hidden"
+      className="gradient-card rounded-xl overflow-x-auto"
     >
       <Table>
         <TableHeader>
