@@ -32,12 +32,14 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "PokéVault — Tu Colección TCG" },
+      { title: "PokeHit - Tu Colección Pokémon" },
       { name: "description", content: "Dashboard premium para coleccionistas de Pokémon TCG" },
-      { property: "og:title", content: "PokéVault — Tu Colección TCG" },
-      { property: "og:description", content: "El centro de mandos definitivo para coleccionistas europeos de TCG" },
+      { property: "og:title", content: "PokeHit - Tu Colección Pokémon" },
+      { property: "og:description", content: "Dashboard premium para coleccionistas de Pokémon TCG" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "PokeHit - Tu Colección Pokémon" },
+      { name: "twitter:description", content: "Dashboard premium para coleccionistas de Pokémon TCG" },
     ],
     links: [
       {
