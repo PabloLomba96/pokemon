@@ -256,15 +256,40 @@ export const portfolioHistory = [
 ];
 
 export const conditions = ["Mint", "Near Mint", "Excellent", "Good", "Light Played", "Played", "Poor"] as const;
-export const languages = [
+
+export const westernLanguages = [
   { code: "EN", label: "English", flag: "🇬🇧" },
-  { code: "ES", label: "Español", flag: "🇪🇸" },
-  { code: "FR", label: "Français", flag: "🇫🇷" },
+  { code: "NL", label: "Nederlands", flag: "🇳🇱" },
   { code: "DE", label: "Deutsch", flag: "🇩🇪" },
+  { code: "FR", label: "Français", flag: "🇫🇷" },
   { code: "IT", label: "Italiano", flag: "🇮🇹" },
+  { code: "ES", label: "Español", flag: "🇪🇸" },
+  { code: "ES-LA", label: "Español (LATAM)", flag: "🇲🇽" },
+  { code: "PT", label: "Português", flag: "🇵🇹" },
+  { code: "PT-BR", label: "Português (BR)", flag: "🇧🇷" },
+  { code: "RU", label: "Русский", flag: "🇷🇺" },
+  { code: "PL", label: "Polski", flag: "🇵🇱" },
+] as const;
+
+export const allLanguages = [
+  ...westernLanguages,
   { code: "JP", label: "日本語", flag: "🇯🇵" },
   { code: "KR", label: "한국어", flag: "🇰🇷" },
   { code: "ZH-S", label: "简体中文", flag: "🇨🇳" },
   { code: "ZH-T", label: "繁體中文", flag: "🇹🇼" },
 ] as const;
+
+export const languagesByRegion: Record<CardRegion, typeof allLanguages[number][]> = {
+  western: [...westernLanguages],
+  japanese: [{ code: "JP", label: "日本語", flag: "🇯🇵" }],
+  korean: [{ code: "KR", label: "한국어", flag: "🇰🇷" }],
+  chinese: [{ code: "ZH-S", label: "简体中文", flag: "🇨🇳" }, { code: "ZH-T", label: "繁體中文", flag: "🇹🇼" }],
+};
+
+/** Helper: get flag emoji for a language code */
+export function getFlagForLanguage(langCode: string): string {
+  const found = allLanguages.find(l => l.code === langCode);
+  return found?.flag ?? "🏳️";
+}
+
 export const finishes = ["Normal", "Holo", "Reverse Holo", "Full Art", "Alternate Art", "Rainbow Rare", "Gold"] as const;

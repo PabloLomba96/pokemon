@@ -1,8 +1,8 @@
 import { useState, useRef } from "react";
-import { motion } from "framer-motion";
-import { X, TrendingUp, TrendingDown, Plus } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, TrendingUp, TrendingDown, Plus, Globe } from "lucide-react";
 import type { PokemonCard } from "../data/mockData";
-import { regions } from "../data/mockData";
+import { regions, languagesByRegion, getFlagForLanguage } from "../data/mockData";
 import { PriceSourcePanel } from "./PriceSourcePanel";
 
 interface CardDetailProps {
@@ -13,8 +13,12 @@ interface CardDetailProps {
 
 export function CardDetail({ card, onClose, onAddToCollection }: CardDetailProps) {
   const [currentPrice, setCurrentPrice] = useState(card.estimatedPrice);
+  const [selectedLang, setSelectedLang] = useState(card.language);
   const imgRef = useRef<HTMLDivElement>(null);
   const [rotation, setRotation] = useState({ x: 0, y: 0 });
+
+  const regionInfo = regions.find(r => r.id === card.region);
+  const availableLanguages = languagesByRegion[card.region];
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!imgRef.current) return;
@@ -25,6 +29,8 @@ export function CardDetail({ card, onClose, onAddToCollection }: CardDetailProps
   };
 
   const handleMouseLeave = () => setRotation({ x: 0, y: 0 });
+
+  const formatNum = (n: number) => n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 
   return (
     <motion.div
@@ -43,8 +49,14 @@ export function CardDetail({ card, onClose, onAddToCollection }: CardDetailProps
       >
         <div className="flex justify-between items-start mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">{card.name}</h2>
-            <p className="text-sm text-muted-foreground">{card.set} — {card.number}</p>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-lg">{getFlagForLanguage(selectedLang)}</span>
+              <h2 className="text-2xl font-bold text-foreground">{card.name}</h2>
+              <span className="text-sm px-2 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20 font-medium">
+                {regionInfo?.flag} {regionInfo?.label}
+              </span>
+            </div>
+            <p className="text-sm text-muted-foreground">{card.set} — {card.number} — {card.rarity}</p>
           </div>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
             <X className="w-6 h-6" />
@@ -85,42 +97,78 @@ export function CardDetail({ card, onClose, onAddToCollection }: CardDetailProps
           </div>
 
           {/* Details panel */}
-          <div className="space-y-6">
+          <div className="space-y-5">
             {/* Price */}
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Precio Estimado</p>
-              <motion.p
-                key={currentPrice}
-                initial={{ scale: 1.1, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="text-4xl font-bold text-neon-gold text-glow-gold"
-              >
-                €{currentPrice.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
-              </motion.p>
+              <AnimatePresence mode="wait">
+                <motion.p
+                  key={`${currentPrice}-${selectedLang}`}
+                  initial={{ scale: 1.1, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.9, opacity: 0 }}
+                  className="text-4xl font-bold text-neon-gold text-glow-gold"
+                >
+                  €{formatNum(currentPrice)}
+                </motion.p>
+              </AnimatePresence>
               <div className={`flex items-center gap-1 mt-1 text-sm font-medium ${card.priceChange >= 0 ? "text-price-up" : "text-price-down"}`}>
                 {card.priceChange >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
                 {card.priceChange >= 0 ? "+" : ""}{card.priceChange}% (30d)
               </div>
             </div>
 
+            {/* Language selector (Western cards have multiple languages) */}
+            {availableLanguages.length > 1 && (
+              <div>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <Globe className="w-3.5 h-3.5 text-muted-foreground" />
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Idioma de impresión
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {availableLanguages.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => {
+                        setSelectedLang(lang.code);
+                        // Simulate price variation by language (±5% for non-English)
+                        const langMultiplier = lang.code === "EN" ? 1 : lang.code === "JP" ? 1.15 : 0.85 + Math.random() * 0.15;
+                        setCurrentPrice(Math.round(card.estimatedPrice * langMultiplier));
+                      }}
+                      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                        selectedLang === lang.code
+                          ? "bg-primary/20 text-primary border border-primary/40"
+                          : "bg-accent text-muted-foreground border border-border hover:border-primary/20"
+                      }`}
+                    >
+                      <span>{lang.flag}</span>
+                      <span>{lang.label}</span>
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1.5 opacity-70">
+                  El idioma afecta directamente al precio de mercado
+                </p>
+              </div>
+            )}
+
             {/* Info chips */}
-            <div className="grid grid-cols-2 gap-3">
-              {(() => {
-                const regionInfo = regions.find(r => r.id === card.region);
-                return [
-                  { label: "Región", value: `${regionInfo?.flag ?? ''} ${regionInfo?.label ?? card.region}` },
-                  { label: "Rareza", value: card.rarity },
-                  { label: "Estado", value: card.condition },
-                  { label: "Idioma", value: card.language },
-                  { label: "Acabado", value: card.finish },
-                  { label: "Set Code", value: card.setCode },
-                ].map((item) => (
-                  <div key={item.label} className="bg-accent/50 rounded-lg p-3">
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{item.label}</p>
-                    <p className="text-sm font-semibold text-foreground">{item.value}</p>
-                  </div>
-                ));
-              })()}
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { label: "Rareza", value: card.rarity },
+                { label: "Estado", value: card.condition },
+                { label: "Acabado", value: card.finish },
+                { label: "Set", value: card.setCode },
+                { label: "Número", value: card.number },
+                { label: "Región", value: `${regionInfo?.flag ?? ''} ${regionInfo?.label ?? card.region}` },
+              ].map((item) => (
+                <div key={item.label} className="bg-accent/50 rounded-lg p-2.5">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{item.label}</p>
+                  <p className="text-xs font-semibold text-foreground mt-0.5">{item.value}</p>
+                </div>
+              ))}
             </div>
 
             {/* Price sources */}
