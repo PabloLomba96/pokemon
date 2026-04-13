@@ -242,7 +242,7 @@ export function ExplorePage({ onAddToCollection }: ExplorePageProps) {
 
       <AnimatePresence>
         {showAddPanel && addingCard && (
-          <AddCardPanel cardName={addingCard.name} onClose={() => setShowAddPanel(false)} onConfirmAdd={() => handleConfirmAdd(addingCard)} />
+          <AddCardPanel card={addingCard} onClose={() => setShowAddPanel(false)} onConfirmAdd={handleConfirmAdd} />
         )}
       </AnimatePresence>
     </div>
