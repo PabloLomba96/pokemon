@@ -6,9 +6,10 @@ import { conditions, allLanguages, finishes } from "../data/mockData";
 interface AddCardPanelProps {
   cardName: string;
   onClose: () => void;
+  onConfirmAdd?: () => void;
 }
 
-export function AddCardPanel({ cardName, onClose }: AddCardPanelProps) {
+export function AddCardPanel({ cardName, onClose, onConfirmAdd }: AddCardPanelProps) {
   const [condition, setCondition] = useState("Near Mint");
   const [language, setLanguage] = useState("EN");
   const [finish, setFinish] = useState("Normal");
@@ -16,6 +17,7 @@ export function AddCardPanel({ cardName, onClose }: AddCardPanelProps) {
 
   const handleSave = () => {
     setSaved(true);
+    onConfirmAdd?.();
     setTimeout(onClose, 1200);
   };
 

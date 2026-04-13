@@ -8,7 +8,7 @@ import { PriceSourcePanel } from "./PriceSourcePanel";
 interface CardDetailProps {
   card: PokemonCard;
   onClose: () => void;
-  onAddToCollection: () => void;
+  onAddToCollection?: () => void;
 }
 
 export function CardDetail({ card, onClose, onAddToCollection }: CardDetailProps) {
