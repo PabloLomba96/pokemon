@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppSidebar } from "./AppSidebar";
 import { Dashboard } from "./Dashboard";
@@ -20,13 +20,20 @@ import { LayoutGrid, List, Filter } from "lucide-react";
 import { toast } from "sonner";
 
 export function AppLayout() {
-  const { isAuthenticated, login, logout, collection, addCard } = useAppStore();
+  const { isAuthenticated, login, logout, collection, addCard, loadCollection, isCollectionLoading } = useAppStore();
   const [activeView, setActiveView] = useState("explore");
   const [selectedCard, setSelectedCard] = useState<PokemonCard | null>(null);
   const [collectionViewMode, setCollectionViewMode] = useState<"grid" | "table">("grid");
   const [collectionRegion, setCollectionRegion] = useState<CardRegion | "all">("all");
   const [showAddPanel, setShowAddPanel] = useState(false);
   const [addingCard, setAddingCard] = useState<PokemonCard | null>(null);
+
+  // Load collection from Supabase when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadCollection();
+    }
+  }, [isAuthenticated, loadCollection]);
 
   if (!isAuthenticated) {
     return <AuthPage onLogin={login} />;
@@ -44,11 +51,15 @@ export function AppLayout() {
     }
   };
 
-  const handleConfirmAdd = (card: PokemonCard) => {
-    addCard(card);
-    toast.success(`${card.name} añadida a tu colección`, {
-      description: `${card.set} — ${card.number}`,
-    });
+  const handleConfirmAdd = async (card: PokemonCard) => {
+    try {
+      await addCard(card);
+      toast.success(`${card.name} añadida a tu colección`, {
+        description: `${card.set} — ${card.number}`,
+      });
+    } catch {
+      // Error toast is handled in the store
+    }
     setShowAddPanel(false);
     setAddingCard(null);
   };
