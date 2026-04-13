@@ -85,9 +85,11 @@ export function AppLayout() {
         <AnimatePresence mode="wait">
           {activeView === "explore" && (
             <motion.div key="explore" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <ExplorePage onAddToCollection={(card) => {
-                addCard(card);
-                toast.success(`${card.name} añadida a tu colección`, { description: `${card.set} — ${card.number}` });
+              <ExplorePage onAddToCollection={async (card) => {
+                try {
+                  await addCard(card);
+                  toast.success(`${card.name} añadida a tu colección`, { description: `${card.set} — ${card.number}` });
+                } catch { /* handled in store */ }
               }} />
             </motion.div>
           )}
