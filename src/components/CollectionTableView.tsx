@@ -35,6 +35,7 @@ export function CollectionTableView({ cards, onSelectCard }: CollectionTableView
             <TableHead className="text-muted-foreground">Carta</TableHead>
             <TableHead className="text-muted-foreground">Región / Idioma</TableHead>
             <TableHead className="text-muted-foreground">Estado</TableHead>
+            <TableHead className="text-muted-foreground">Graduación</TableHead>
             <TableHead className="text-muted-foreground">Acabado</TableHead>
             <TableHead className="text-muted-foreground text-right">Valor Actual</TableHead>
             <TableHead className="text-muted-foreground text-right">Ganancia</TableHead>
@@ -83,6 +84,16 @@ export function CollectionTableView({ cards, onSelectCard }: CollectionTableView
                   <span className="text-xs font-medium px-2 py-1 rounded-md bg-accent/50 text-foreground">
                     {card.condition}
                   </span>
+                </TableCell>
+
+                <TableCell>
+                  {card.grading ? (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md bg-neon-gold/20 text-neon-gold border border-neon-gold/30">
+                      {card.grading.company} {card.grading.grade}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  )}
                 </TableCell>
 
                 <TableCell>

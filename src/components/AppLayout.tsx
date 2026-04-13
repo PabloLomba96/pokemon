@@ -8,6 +8,7 @@ import { CollectionTableView } from "./CollectionTableView";
 import { CardDetail } from "./CardDetail";
 import { AddCardPanel } from "./AddCardPanel";
 import { SearchBar } from "./SearchBar";
+import { GlobalSearch } from "./GlobalSearch";
 import { AuthPage } from "./AuthPage";
 import { ProfilePage } from "./ProfilePage";
 import { ComingSoonPage } from "./ComingSoonPage";
@@ -63,6 +64,13 @@ export function AppLayout() {
       />
 
       <main className="flex-1 min-w-0">
+        {/* Global top bar with Omnibar */}
+        <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">
+          <div className="flex items-center justify-between px-6 h-14">
+            <span className="text-sm font-semibold text-muted-foreground">PokéVault</span>
+            <GlobalSearch onSelectCard={(card) => setSelectedCard(card)} />
+          </div>
+        </header>
         <AnimatePresence mode="wait">
           {activeView === "explore" && (
             <motion.div key="explore" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>

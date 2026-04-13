@@ -41,6 +41,14 @@ export function CardGrid({ cards, onSelectCard }: CardGridProps) {
                   {card.region === "western" && <span>🌍</span>}
                 </span>
               </div>
+              {/* Grading badge */}
+              {card.grading && (
+                <div className="absolute top-1.5 right-1.5">
+                  <span className="bg-neon-gold/90 text-background text-[9px] px-1.5 py-0.5 rounded-md font-bold backdrop-blur-sm shadow-lg">
+                    {card.grading.company} {card.grading.grade}
+                  </span>
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-1.5 mb-0.5">
               <p className="text-sm font-semibold text-foreground truncate">{card.name}</p>
