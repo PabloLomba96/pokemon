@@ -33,6 +33,7 @@ export function ExplorePage({ onAddToCollection }: ExplorePageProps) {
   const filtered = catalogCards
     .filter((c) => activeRegion === "all" || c.region === activeRegion)
     .filter((c) => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    .filter((c) => selectedEras.length === 0 || selectedEras.includes(c.era))
     .filter((c) => selectedSets.length === 0 || selectedSets.includes(c.set))
     .filter((c) => selectedRarities.length === 0 || selectedRarities.includes(c.rarity))
     .sort((a, b) => {
