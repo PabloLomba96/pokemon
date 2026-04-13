@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Sparkles, TrendingUp, SlidersHorizontal, Badge } from "lucide-react";
+import { Search, Sparkles, TrendingUp, SlidersHorizontal } from "lucide-react";
 import { catalogCards, regions } from "../data/mockData";
 import type { PokemonCard, CardRegion } from "../data/mockData";
 import { CardGrid } from "./CardGrid";
@@ -8,6 +8,8 @@ import { CardDetail } from "./CardDetail";
 import { AddCardPanel } from "./AddCardPanel";
 import { AdvancedFilters } from "./AdvancedFilters";
 import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group";
+import { Skeleton } from "./ui/skeleton";
+import { usePokemonSearch } from "../hooks/usePokemonSearch";
 import { toast } from "sonner";
 
 interface ExplorePageProps {
@@ -30,9 +32,21 @@ export function ExplorePage({ onAddToCollection }: ExplorePageProps) {
 
   const advancedCount = selectedEras.length + selectedSets.length + selectedRarities.length;
 
-  const filtered = catalogCards
+  // Real API search
+  const { results: apiResults, isLoading: apiLoading, error: apiError } = usePokemonSearch(searchQuery);
+  const isSearching = searchQuery.trim().length >= 2;
+
+  // Show API error as toast
+  if (apiError) {
+    toast.error(apiError);
+  }
+
+  // Use API results when searching, catalog cards otherwise
+  const baseCards = isSearching ? apiResults : catalogCards;
+
+  const filtered = baseCards
     .filter((c) => activeRegion === "all" || c.region === activeRegion)
-    .filter((c) => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    .filter((c) => !isSearching || c.name.toLowerCase().includes(searchQuery.toLowerCase()))
     .filter((c) => selectedEras.length === 0 || selectedEras.includes(c.era))
     .filter((c) => selectedSets.length === 0 || selectedSets.includes(c.set))
     .filter((c) => selectedRarities.length === 0 || selectedRarities.includes(c.rarity))
@@ -73,7 +87,7 @@ export function ExplorePage({ onAddToCollection }: ExplorePageProps) {
               Descubre Cartas <span className="text-primary text-glow-purple">Pokémon TCG</span>
             </h1>
             <p className="text-muted-foreground max-w-lg mx-auto">
-              Explora las cartas más icónicas del mercado. Consulta precios en tiempo real y añádelas a tu colección.
+              Busca en la base de datos oficial con precios reales de Cardmarket y TCGPlayer.
             </p>
           </motion.div>
 
@@ -86,39 +100,49 @@ export function ExplorePage({ onAddToCollection }: ExplorePageProps) {
               <input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar por nombre de carta..."
+                placeholder="Buscar por nombre de carta (ej: Charizard, Pikachu)..."
                 className="flex-1 bg-transparent text-foreground placeholder:text-muted-foreground outline-none"
               />
+              {apiLoading && (
+                <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+              )}
             </div>
+            {isSearching && !apiLoading && (
+              <p className="text-xs text-muted-foreground mt-2 text-center">
+                {apiResults.length} resultados de la API oficial
+              </p>
+            )}
           </motion.div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
-        {/* Trending */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
-          <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="w-4 h-4 text-price-up" />
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Tendencia al Alza</h2>
-          </div>
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
-            {trendingCards.map((card) => (
-              <motion.button
-                key={card.id}
-                whileHover={{ scale: 1.03 }}
-                onClick={() => setSelectedCard(card)}
-                className="flex-shrink-0 flex items-center gap-3 px-4 py-3 rounded-xl gradient-card min-w-[220px] cursor-pointer"
-              >
-                <img src={card.image} alt={card.name} className="w-10 h-14 object-contain rounded" />
-                <div className="text-left">
-                  <p className="text-sm font-semibold text-foreground">{card.name}</p>
-                  <p className="text-xs text-muted-foreground">{card.set}</p>
-                  <span className="text-xs font-bold text-price-up">+{card.priceChange}%</span>
-                </div>
-              </motion.button>
-            ))}
-          </div>
-        </motion.div>
+        {/* Trending (only when not searching) */}
+        {!isSearching && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
+            <div className="flex items-center gap-2 mb-4">
+              <TrendingUp className="w-4 h-4 text-price-up" />
+              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Tendencia al Alza</h2>
+            </div>
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
+              {trendingCards.map((card) => (
+                <motion.button
+                  key={card.id}
+                  whileHover={{ scale: 1.03 }}
+                  onClick={() => setSelectedCard(card)}
+                  className="flex-shrink-0 flex items-center gap-3 px-4 py-3 rounded-xl gradient-card min-w-[220px] cursor-pointer"
+                >
+                  <img src={card.image} alt={card.name} className="w-10 h-14 object-contain rounded" />
+                  <div className="text-left">
+                    <p className="text-sm font-semibold text-foreground">{card.name}</p>
+                    <p className="text-xs text-muted-foreground">{card.set}</p>
+                    <span className="text-xs font-bold text-price-up">+{card.priceChange}%</span>
+                  </div>
+                </motion.button>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
         {/* Filter toolbar */}
         <motion.div
@@ -146,7 +170,6 @@ export function ExplorePage({ onAddToCollection }: ExplorePageProps) {
             </button>
           </div>
 
-          {/* Region ToggleGroup */}
           <ToggleGroup
             type="single"
             value={activeRegion}
@@ -164,12 +187,10 @@ export function ExplorePage({ onAddToCollection }: ExplorePageProps) {
               >
                 <span className="mr-1.5">{r.flag}</span>
                 {r.label}
-                <span className="ml-1.5 opacity-50">({catalogCards.filter(c => c.region === r.id).length})</span>
               </ToggleGroupItem>
             ))}
           </ToggleGroup>
 
-          {/* Sort options */}
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">Ordenar:</span>
             {([
@@ -191,7 +212,6 @@ export function ExplorePage({ onAddToCollection }: ExplorePageProps) {
             ))}
           </div>
 
-          {/* Active advanced filter tags */}
           {advancedCount > 0 && (
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Activos:</span>
@@ -204,14 +224,34 @@ export function ExplorePage({ onAddToCollection }: ExplorePageProps) {
           )}
         </motion.div>
 
-        {/* Cards grid */}
+        {/* Cards grid or skeletons */}
         <div>
-          <p className="text-xs text-muted-foreground mb-4">{filtered.length} cartas encontradas</p>
-          <CardGrid cards={filtered} onSelectCard={setSelectedCard} />
-          {filtered.length === 0 && (
-            <div className="text-center py-16">
-              <p className="text-muted-foreground">No se encontraron cartas con esos filtros.</p>
-            </div>
+          {apiLoading && isSearching ? (
+            <>
+              <p className="text-xs text-muted-foreground mb-4">Buscando en la API oficial...</p>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {Array.from({ length: 10 }).map((_, i) => (
+                  <div key={i} className="gradient-card rounded-xl p-3 space-y-3">
+                    <Skeleton className="aspect-[2.5/3.5] rounded-lg" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                    <Skeleton className="h-5 w-1/3" />
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-xs text-muted-foreground mb-4">{filtered.length} cartas encontradas</p>
+              <CardGrid cards={filtered} onSelectCard={setSelectedCard} />
+              {filtered.length === 0 && (
+                <div className="text-center py-16">
+                  <p className="text-muted-foreground">
+                    {isSearching ? "No se encontraron cartas en la API." : "No se encontraron cartas con esos filtros."}
+                  </p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -228,14 +268,12 @@ export function ExplorePage({ onAddToCollection }: ExplorePageProps) {
         onRaritiesChange={setSelectedRarities}
       />
 
-      {/* Card detail modal */}
       <AnimatePresence>
         {selectedCard && (
           <CardDetail card={selectedCard} onClose={() => setSelectedCard(null)} onAddToCollection={handleAddToCollection} />
         )}
       </AnimatePresence>
 
-      {/* Add panel */}
       <AnimatePresence>
         {showAddPanel && addingCard && (
           <AddCardPanel cardName={addingCard.name} onClose={() => setShowAddPanel(false)} onConfirmAdd={() => handleConfirmAdd(addingCard)} />
