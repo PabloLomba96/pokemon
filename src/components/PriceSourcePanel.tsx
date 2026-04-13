@@ -13,8 +13,8 @@ interface PriceSource {
 }
 
 interface PriceSourcePanelProps {
-  tcgPrice: number;
-  cardmarketPrice: number;
+  tcgPrice: number | null;
+  cardmarketPrice: number | null;
   ebayPrice: number | null;
   onPriceChange: (newPrice: number) => void;
 }
@@ -24,9 +24,9 @@ export function PriceSourcePanel({ tcgPrice, cardmarketPrice, ebayPrice, onPrice
   const sym = preferences.currencySymbol;
 
   const sources: PriceSource[] = [
-    { id: "tcg", label: "Pokémon TCG API", price: tcgPrice, tooltip: "Datos proporcionados por Pokémon TCG API. Actualizado hace 2h", defaultOn: true },
-    { id: "cardmarket", label: "Cardmarket", price: cardmarketPrice, tooltip: "Datos proporcionados por Cardmarket (Europa). Actualizado hace 1h", defaultOn: true },
-    { id: "ebay", label: "eBay (Vendidos)", price: ebayPrice, tooltip: "Datos de últimas ventas en eBay. Actualizado hace 4h", defaultOn: false },
+    { id: "tcg", label: "Pokémon TCG API", price: tcgPrice, tooltip: tcgPrice !== null ? "Datos proporcionados por Pokémon TCG API" : "Dato no disponible — API no devuelve precio para esta carta", defaultOn: tcgPrice !== null },
+    { id: "cardmarket", label: "Cardmarket", price: cardmarketPrice, tooltip: cardmarketPrice !== null ? "Datos proporcionados por Cardmarket (Europa)" : "Dato no disponible — Sin datos de Cardmarket", defaultOn: cardmarketPrice !== null },
+    { id: "ebay", label: "eBay (Vendidos)", price: ebayPrice, tooltip: ebayPrice !== null ? "Datos de últimas ventas en eBay" : "Dato no disponible — Requiere integración con eBay API", defaultOn: false },
     { id: "internal", label: "Mercado Interno", price: null, tooltip: "Próximamente — Datos del marketplace interno de PokéVault", locked: true, defaultOn: false },
   ];
 
