@@ -17,6 +17,7 @@ export function AddCardPanel({ cardName, onClose, onConfirmAdd }: AddCardPanelPr
 
   const handleSave = () => {
     setSaved(true);
+    onConfirmAdd?.();
     setTimeout(onClose, 1200);
   };
 

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
+  Compass,
   Library,
   Search,
   Store,
@@ -15,9 +16,10 @@ import {
 } from "lucide-react";
 
 const mainNav = [
-  { icon: LayoutDashboard, label: "Dashboard", id: "dashboard", active: true },
-  { icon: Library, label: "Colección", id: "collection", active: false },
-  { icon: Search, label: "Buscador", id: "search", active: false },
+  { icon: Compass, label: "Explorar", id: "explore" },
+  { icon: LayoutDashboard, label: "Dashboard", id: "dashboard" },
+  { icon: Library, label: "Colección", id: "collection" },
+  { icon: Search, label: "Buscador", id: "search" },
 ];
 
 const comingSoon = [
@@ -48,14 +50,9 @@ export function AppSidebar({ activeView, onNavigate }: AppSidebarProps) {
         </div>
         <AnimatePresence>
           {!collapsed && (
-            <motion.span
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+            <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="font-bold text-lg text-foreground whitespace-nowrap"
-            >
-              PokéVault
-            </motion.span>
+            >PokéVault</motion.span>
           )}
         </AnimatePresence>
       </div>
@@ -65,70 +62,46 @@ export function AppSidebar({ activeView, onNavigate }: AppSidebarProps) {
         {mainNav.map((item) => {
           const isActive = activeView === item.id;
           return (
-            <button
-              key={item.id}
-              onClick={() => onNavigate(item.id)}
+            <button key={item.id} onClick={() => onNavigate(item.id)}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group cursor-pointer ${
-                isActive
-                  ? "bg-primary/15 text-primary"
-                  : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                isActive ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-accent hover:text-foreground"
               }`}
             >
               <item.icon className={`w-5 h-5 shrink-0 ${isActive ? "text-primary" : ""}`} />
               <AnimatePresence>
                 {!collapsed && (
-                  <motion.span
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
+                  <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                     className="text-sm font-medium whitespace-nowrap"
-                  >
-                    {item.label}
-                  </motion.span>
+                  >{item.label}</motion.span>
                 )}
               </AnimatePresence>
               {isActive && !collapsed && (
-                <motion.div
-                  layoutId="sidebar-active"
-                  className="ml-auto w-1.5 h-1.5 rounded-full bg-primary"
-                />
+                <motion.div layoutId="sidebar-active" className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />
               )}
             </button>
           );
         })}
 
-        {/* Coming soon section */}
+        {/* Coming soon */}
         <div className="pt-6">
           <AnimatePresence>
             {!collapsed && (
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2"
-              >
-                Comunidad & Tienda
-              </motion.p>
+              >Comunidad & Tienda</motion.p>
             )}
           </AnimatePresence>
           {comingSoon.map((item) => (
-            <div
-              key={item.id}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground/40 cursor-not-allowed"
-            >
+            <div key={item.id} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground/40 cursor-not-allowed">
               <item.icon className="w-5 h-5 shrink-0" />
               <AnimatePresence>
                 {!collapsed && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                     className="flex items-center gap-2 whitespace-nowrap"
                   >
                     <span className="text-sm">{item.label}</span>
                     <span className="flex items-center gap-1 text-[10px] bg-accent/50 px-1.5 py-0.5 rounded-full">
-                      <Lock className="w-2.5 h-2.5" />
-                      Pronto
+                      <Lock className="w-2.5 h-2.5" />Pronto
                     </span>
                   </motion.div>
                 )}
@@ -138,9 +111,8 @@ export function AppSidebar({ activeView, onNavigate }: AppSidebarProps) {
         </div>
       </nav>
 
-      {/* Collapse toggle */}
-      <button
-        onClick={() => setCollapsed(!collapsed)}
+      {/* Collapse */}
+      <button onClick={() => setCollapsed(!collapsed)}
         className="mx-3 mb-4 flex items-center justify-center py-2 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer"
       >
         {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
