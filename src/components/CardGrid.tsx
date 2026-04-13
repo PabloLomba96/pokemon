@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import type { PokemonCard } from "../data/mockData";
 import { getFlagForLanguage, regions } from "../data/mockData";
+import { useAppStore } from "../store/useAppStore";
 
 interface CardGridProps {
   cards: PokemonCard[];
@@ -9,10 +10,12 @@ interface CardGridProps {
 }
 
 export function CardGrid({ cards, onSelectCard }: CardGridProps) {
+  const { preferences } = useAppStore();
+  const sym = preferences.currencySymbol;
+
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
       {cards.map((card, i) => {
-        const regionInfo = regions.find(r => r.id === card.region);
         return (
           <motion.div
             key={card.id}
@@ -54,7 +57,7 @@ export function CardGrid({ cards, onSelectCard }: CardGridProps) {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm font-bold text-neon-gold text-glow-gold">
-                €{card.estimatedPrice.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+                {sym}{card.estimatedPrice.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
               </span>
               <span className={`flex items-center gap-0.5 text-xs font-medium ${card.priceChange >= 0 ? "text-price-up" : "text-price-down"}`}>
                 {card.priceChange >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
