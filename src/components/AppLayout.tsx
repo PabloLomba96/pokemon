@@ -18,32 +18,112 @@ import type { PokemonCard, CardRegion } from "../types/cards";
 import { regions } from "../constants/cards";
 import { LayoutGrid, List, Filter } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "../integrations/supabase/client";
 
 export function AppLayout() {
-  const { isAuthenticated, login, logout, collection, addCard, loadCollection, isCollectionLoading } = useAppStore();
+  const {
+    isAuthenticated, userId, logout, setAuth,
+    collection, addCard, loadCollection, isCollectionLoading,
+  } = useAppStore();
   const [activeView, setActiveView] = useState("explore");
   const [selectedCard, setSelectedCard] = useState<PokemonCard | null>(null);
   const [collectionViewMode, setCollectionViewMode] = useState<"grid" | "table">("grid");
   const [collectionRegion, setCollectionRegion] = useState<CardRegion | "all">("all");
   const [showAddPanel, setShowAddPanel] = useState(false);
   const [addingCard, setAddingCard] = useState<PokemonCard | null>(null);
+  const [isGuest, setIsGuest] = useState(false);
+  const [authReady, setAuthReady] = useState(false);
 
-  // Load collection from Supabase when authenticated
+  // Listen to Supabase auth state
   useEffect(() => {
-    if (isAuthenticated) {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setAuth(true, session.user.id);
+        setIsGuest(false);
+      } else if (!isGuest) {
+        setAuth(false, null);
+      }
+      setAuthReady(true);
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setAuth(true, session.user.id);
+      }
+      setAuthReady(true);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Load collection when authenticated
+  useEffect(() => {
+    if (isAuthenticated && userId) {
       loadCollection();
     }
-  }, [isAuthenticated, loadCollection]);
+  }, [isAuthenticated, userId]);
 
-  if (!isAuthenticated) {
-    return <AuthPage onLogin={login} />;
+  // Show auth page if not authenticated and not guest
+  if (!authReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
   }
+
+  if (!isAuthenticated && !isGuest) {
+    return (
+      <AuthPage
+        onLogin={() => {}}
+        onGuest={() => {
+          setIsGuest(true);
+          setActiveView("explore");
+        }}
+      />
+    );
+  }
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setIsGuest(false);
+    logout();
+  };
+
+  // Guest guard: redirect to auth-required views
+  const guardedViews = ["dashboard", "collection", "profile"];
+  const requiresAuth = guardedViews.includes(activeView) && isGuest;
+
+  const handleNavigate = (view: string) => {
+    if (guardedViews.includes(view) && isGuest) {
+      toast.error("Necesitas crear una cuenta para acceder a esta sección.", {
+        action: {
+          label: "Crear cuenta",
+          onClick: () => {
+            setIsGuest(false);
+            setAuth(false, null);
+          },
+        },
+      });
+      return;
+    }
+    setActiveView(view);
+  };
 
   const filteredCollection = collectionRegion === "all"
     ? collection
     : collection.filter((c) => c.region === collectionRegion);
 
   const handleAddFromDetail = () => {
+    if (isGuest) {
+      toast.error("Regístrate para añadir cartas a tu colección.", {
+        action: {
+          label: "Crear cuenta",
+          onClick: () => { setIsGuest(false); setAuth(false, null); },
+        },
+      });
+      return;
+    }
     if (selectedCard) {
       setAddingCard(selectedCard);
       setSelectedCard(null);
@@ -58,10 +138,26 @@ export function AppLayout() {
         description: `${card.set} — ${card.number}`,
       });
     } catch {
-      // Error toast is handled in the store
+      // Error toast handled in store
     }
     setShowAddPanel(false);
     setAddingCard(null);
+  };
+
+  const handleAddFromExplore = async (card: PokemonCard) => {
+    if (isGuest) {
+      toast.error("Regístrate para añadir cartas a tu colección.", {
+        action: {
+          label: "Crear cuenta",
+          onClick: () => { setIsGuest(false); setAuth(false, null); },
+        },
+      });
+      return;
+    }
+    try {
+      await addCard(card);
+      toast.success(`${card.name} añadida a tu colección`, { description: `${card.set} — ${card.number}` });
+    } catch { /* handled in store */ }
   };
 
   const comingSoonViews = ["marketplace", "packs", "accessories", "trades"];
@@ -70,42 +166,34 @@ export function AppLayout() {
     <div className="flex min-h-screen bg-background">
       <AppSidebar
         activeView={activeView}
-        onNavigate={setActiveView}
-        onLogout={logout}
+        onNavigate={handleNavigate}
+        onLogout={handleLogout}
       />
 
       <main className="flex-1 min-w-0">
-        {/* Global top bar with Omnibar */}
         <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">
           <div className="flex items-center justify-between px-6 h-14">
-            <span className="text-sm font-semibold text-muted-foreground">PokéVault</span>
+            <span className="text-sm font-semibold text-muted-foreground">
+              PokéVault {isGuest && <span className="text-xs text-primary/60 ml-1">(Invitado)</span>}
+            </span>
             <GlobalSearch onSelectCard={(card) => setSelectedCard(card)} />
           </div>
         </header>
+
         <AnimatePresence mode="wait">
           {activeView === "explore" && (
             <motion.div key="explore" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <ExplorePage onAddToCollection={async (card) => {
-                try {
-                  await addCard(card);
-                  toast.success(`${card.name} añadida a tu colección`, { description: `${card.set} — ${card.number}` });
-                } catch { /* handled in store */ }
-              }} />
+              <ExplorePage onAddToCollection={handleAddFromExplore} />
             </motion.div>
           )}
 
-          {activeView === "dashboard" && (
+          {activeView === "dashboard" && !requiresAuth && (
             <motion.div key="dashboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">
-                <div className="flex items-center justify-between px-6 h-16">
-                  <h1 className="text-lg font-bold text-foreground">Mi Dashboard</h1>
-                </div>
-              </header>
-              <Dashboard collection={collection} onNavigate={setActiveView} />
+              <Dashboard collection={collection} onNavigate={handleNavigate} />
             </motion.div>
           )}
 
-          {activeView === "collection" && (
+          {activeView === "collection" && !requiresAuth && (
             <motion.div key="collection" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">
                 <div className="flex items-center justify-between px-6 h-16">
@@ -113,16 +201,10 @@ export function AppLayout() {
                   <div className="flex items-center gap-3">
                     <SearchBar onSelectCard={setSelectedCard} />
                     <div className="flex items-center border border-border rounded-lg overflow-hidden">
-                      <button
-                        onClick={() => setCollectionViewMode("grid")}
-                        className={`p-2 transition-colors cursor-pointer ${collectionViewMode === "grid" ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground"}`}
-                      >
+                      <button onClick={() => setCollectionViewMode("grid")} className={`p-2 transition-colors cursor-pointer ${collectionViewMode === "grid" ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground"}`}>
                         <LayoutGrid className="w-4 h-4" />
                       </button>
-                      <button
-                        onClick={() => setCollectionViewMode("table")}
-                        className={`p-2 transition-colors cursor-pointer ${collectionViewMode === "table" ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground"}`}
-                      >
+                      <button onClick={() => setCollectionViewMode("table")} className={`p-2 transition-colors cursor-pointer ${collectionViewMode === "table" ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground"}`}>
                         <List className="w-4 h-4" />
                       </button>
                     </div>
@@ -131,7 +213,11 @@ export function AppLayout() {
               </header>
 
               <div className="p-6">
-                {collection.length === 0 ? (
+                {isCollectionLoading ? (
+                  <div className="flex items-center justify-center py-16">
+                    <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                  </div>
+                ) : collection.length === 0 ? (
                   <EmptyState
                     title="Tu colección está vacía"
                     message="Aún no has añadido ninguna carta. Explora el catálogo y empieza a construir tu legado TCG."
@@ -142,24 +228,11 @@ export function AppLayout() {
                   <>
                     <div className="flex items-center gap-2 flex-wrap mb-6">
                       <Filter className="w-4 h-4 text-muted-foreground" />
-                      <button
-                        onClick={() => setCollectionRegion("all")}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                          collectionRegion === "all"
-                            ? "bg-primary/20 text-primary border border-primary/40"
-                            : "bg-accent text-muted-foreground border border-border hover:border-primary/20"
-                        }`}
-                      >🌐 Todas</button>
+                      <button onClick={() => setCollectionRegion("all")} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${collectionRegion === "all" ? "bg-primary/20 text-primary border border-primary/40" : "bg-accent text-muted-foreground border border-border hover:border-primary/20"}`}>
+                        🌐 Todas
+                      </button>
                       {regions.map((r) => (
-                        <button
-                          key={r.id}
-                          onClick={() => setCollectionRegion(r.id)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                            collectionRegion === r.id
-                              ? "bg-primary/20 text-primary border border-primary/40"
-                              : "bg-accent text-muted-foreground border border-border hover:border-primary/20"
-                          }`}
-                        >
+                        <button key={r.id} onClick={() => setCollectionRegion(r.id)} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${collectionRegion === r.id ? "bg-primary/20 text-primary border border-primary/40" : "bg-accent text-muted-foreground border border-border hover:border-primary/20"}`}>
                           {r.flag} {r.label}
                         </button>
                       ))}
@@ -201,7 +274,7 @@ export function AppLayout() {
             </motion.div>
           )}
 
-          {activeView === "profile" && (
+          {activeView === "profile" && !requiresAuth && (
             <motion.div key="profile" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">
                 <div className="flex items-center px-6 h-16">
@@ -233,20 +306,18 @@ export function AppLayout() {
         </AnimatePresence>
       </main>
 
-      {/* Card detail modal */}
       <AnimatePresence>
         {selectedCard && (
           <CardDetail card={selectedCard} onClose={() => setSelectedCard(null)} onAddToCollection={handleAddFromDetail} />
         )}
       </AnimatePresence>
 
-      {/* Add panel */}
       <AnimatePresence>
         {showAddPanel && addingCard && (
           <AddCardPanel
-            cardName={addingCard.name}
+            card={addingCard}
             onClose={() => setShowAddPanel(false)}
-            onConfirmAdd={() => handleConfirmAdd(addingCard)}
+            onConfirmAdd={handleConfirmAdd}
           />
         )}
       </AnimatePresence>

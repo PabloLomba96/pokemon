@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, TrendingUp, TrendingDown, Plus, Globe } from "lucide-react";
 import type { PokemonCard } from "../types/cards";
-import { regions, languagesByRegion, getFlagForLanguage } from "../constants/cards";
+import { regions, getFlagForLanguage } from "../constants/cards";
 import { PriceSourcePanel } from "./PriceSourcePanel";
 import { PriceHistoryChart } from "./PriceHistoryChart";
 import { useAppStore } from "../store/useAppStore";
@@ -15,14 +15,12 @@ interface CardDetailProps {
 
 export function CardDetail({ card, onClose, onAddToCollection }: CardDetailProps) {
   const [currentPrice, setCurrentPrice] = useState(card.estimatedPrice);
-  const [selectedLang, setSelectedLang] = useState(card.language);
   const imgRef = useRef<HTMLDivElement>(null);
   const [rotation, setRotation] = useState({ x: 0, y: 0 });
   const { preferences } = useAppStore();
   const sym = preferences.currencySymbol;
 
   const regionInfo = regions.find(r => r.id === card.region);
-  const availableLanguages = languagesByRegion[card.region];
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!imgRef.current) return;
@@ -34,7 +32,10 @@ export function CardDetail({ card, onClose, onAddToCollection }: CardDetailProps
 
   const handleMouseLeave = () => setRotation({ x: 0, y: 0 });
 
-  const formatNum = (n: number) => n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  const formatPrice = (cents: number) => {
+    const val = (cents / 100).toFixed(2);
+    return `${sym}${val}`;
+  };
 
   return (
     <motion.div
@@ -54,7 +55,7 @@ export function CardDetail({ card, onClose, onAddToCollection }: CardDetailProps
         <div className="flex justify-between items-start mb-6">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-lg">{getFlagForLanguage(selectedLang)}</span>
+              <span className="text-lg">{getFlagForLanguage(card.language)}</span>
               <h2 className="text-2xl font-bold text-foreground">{card.name}</h2>
               <span className="text-sm px-2 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20 font-medium">
                 {regionInfo?.flag} {regionInfo?.label}
@@ -68,7 +69,7 @@ export function CardDetail({ card, onClose, onAddToCollection }: CardDetailProps
         </div>
 
         <div className="grid md:grid-cols-2 gap-8">
-          {/* Card image with holo effect */}
+          {/* Card image */}
           <div
             ref={imgRef}
             onMouseMove={handleMouseMove}
@@ -81,11 +82,7 @@ export function CardDetail({ card, onClose, onAddToCollection }: CardDetailProps
               transition={{ type: "spring", stiffness: 200, damping: 20 }}
               className="relative rounded-xl overflow-hidden shadow-2xl"
             >
-              <img
-                src={card.image}
-                alt={card.name}
-                className="w-full max-w-xs object-contain"
-              />
+              <img src={card.image} alt={card.name} className="w-full max-w-xs object-contain" />
               <div
                 className="absolute inset-0 pointer-events-none"
                 style={{
@@ -100,62 +97,29 @@ export function CardDetail({ card, onClose, onAddToCollection }: CardDetailProps
             </motion.div>
           </div>
 
-          {/* Details panel */}
+          {/* Details */}
           <div className="space-y-5">
             {/* Price */}
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Precio Estimado</p>
               <AnimatePresence mode="wait">
                 <motion.p
-                  key={`${currentPrice}-${selectedLang}`}
+                  key={currentPrice}
                   initial={{ scale: 1.1, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.9, opacity: 0 }}
                   className="text-4xl font-bold text-neon-gold text-glow-gold"
                 >
-                  {sym}{formatNum(currentPrice)}
+                  {currentPrice > 0 ? formatPrice(currentPrice) : "No disponible"}
                 </motion.p>
               </AnimatePresence>
-              <div className={`flex items-center gap-1 mt-1 text-sm font-medium ${card.priceChange >= 0 ? "text-price-up" : "text-price-down"}`}>
-                {card.priceChange >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-                {card.priceChange >= 0 ? "+" : ""}{card.priceChange}% (30d)
-              </div>
+              {card.priceChange !== 0 && (
+                <div className={`flex items-center gap-1 mt-1 text-sm font-medium ${card.priceChange >= 0 ? "text-price-up" : "text-price-down"}`}>
+                  {card.priceChange >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                  {card.priceChange >= 0 ? "+" : ""}{card.priceChange}% (30d)
+                </div>
+              )}
             </div>
-
-            {/* Language selector */}
-            {availableLanguages.length > 1 && (
-              <div>
-                <div className="flex items-center gap-1.5 mb-2">
-                  <Globe className="w-3.5 h-3.5 text-muted-foreground" />
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Idioma de impresión
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {availableLanguages.map((lang) => (
-                    <button
-                      key={lang.code}
-                      onClick={() => {
-                        setSelectedLang(lang.code);
-                        const langMultiplier = lang.code === "EN" ? 1 : lang.code === "JP" ? 1.15 : 0.85 + Math.random() * 0.15;
-                        setCurrentPrice(Math.round(card.estimatedPrice * langMultiplier));
-                      }}
-                      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
-                        selectedLang === lang.code
-                          ? "bg-primary/20 text-primary border border-primary/40"
-                          : "bg-accent text-muted-foreground border border-border hover:border-primary/20"
-                      }`}
-                    >
-                      <span>{lang.flag}</span>
-                      <span>{lang.label}</span>
-                    </button>
-                  ))}
-                </div>
-                <p className="text-[10px] text-muted-foreground mt-1.5 opacity-70">
-                  El idioma afecta directamente al precio de mercado
-                </p>
-              </div>
-            )}
 
             {/* Info chips */}
             <div className="grid grid-cols-3 gap-2">
@@ -190,7 +154,7 @@ export function CardDetail({ card, onClose, onAddToCollection }: CardDetailProps
             {/* Add button */}
             <button
               onClick={onAddToCollection}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors glow-purple cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors glow-purple cursor-pointer active:scale-95"
             >
               <Plus className="w-5 h-5" />
               Añadir a Colección
