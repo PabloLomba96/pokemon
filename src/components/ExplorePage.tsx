@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Sparkles, TrendingUp, Filter } from "lucide-react";
+import { Search, Sparkles, TrendingUp, SlidersHorizontal } from "lucide-react";
 import { catalogCards, regions, getFlagForLanguage } from "../data/mockData";
 import type { PokemonCard, CardRegion } from "../data/mockData";
 import { CardGrid } from "./CardGrid";
 import { CardDetail } from "./CardDetail";
 import { AddCardPanel } from "./AddCardPanel";
+import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group";
 
 interface ExplorePageProps {
   onAddToCollection?: (card: PokemonCard) => void;
@@ -17,10 +18,16 @@ export function ExplorePage({ onAddToCollection }: ExplorePageProps) {
   const [addingCard, setAddingCard] = useState<PokemonCard | null>(null);
   const [activeRegion, setActiveRegion] = useState<CardRegion | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"name" | "price" | "change">("name");
 
   const filtered = catalogCards
     .filter((c) => activeRegion === "all" || c.region === activeRegion)
-    .filter((c) => c.name.toLowerCase().includes(searchQuery.toLowerCase()));
+    .filter((c) => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    .sort((a, b) => {
+      if (sortBy === "price") return b.estimatedPrice - a.estimatedPrice;
+      if (sortBy === "change") return b.priceChange - a.priceChange;
+      return a.name.localeCompare(b.name);
+    });
 
   const trendingCards = [...catalogCards].sort((a, b) => b.priceChange - a.priceChange).slice(0, 5);
 
@@ -100,28 +107,63 @@ export function ExplorePage({ onAddToCollection }: ExplorePageProps) {
           </div>
         </motion.div>
 
-        {/* Region filters */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <Filter className="w-4 h-4 text-muted-foreground" />
-          <button onClick={() => setActiveRegion("all")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-              activeRegion === "all"
-                ? "bg-primary/20 text-primary border border-primary/40"
-                : "bg-accent text-muted-foreground border border-border hover:border-primary/20"
-            }`}
-          >🌐 Todas</button>
-          {regions.map((r) => (
-            <button key={r.id} onClick={() => setActiveRegion(r.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                activeRegion === r.id
-                  ? "bg-primary/20 text-primary border border-primary/40"
-                  : "bg-accent text-muted-foreground border border-border hover:border-primary/20"
-              }`}
-            >
-              {r.flag} {r.label} <span className="opacity-60">({catalogCards.filter(c => c.region === r.id).length})</span>
-            </button>
-          ))}
-        </div>
+        {/* Filter toolbar */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          className="gradient-card rounded-xl p-4 space-y-4"
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <SlidersHorizontal className="w-4 h-4 text-muted-foreground" />
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Filtros de Región & Numeración</h3>
+          </div>
+
+          {/* Region ToggleGroup */}
+          <ToggleGroup
+            type="single"
+            value={activeRegion}
+            onValueChange={(val) => { if (val) setActiveRegion(val as CardRegion | "all"); }}
+            className="flex flex-wrap gap-1.5 justify-start"
+          >
+            <ToggleGroupItem value="all" className="px-4 py-2 rounded-lg text-xs font-semibold data-[state=on]:bg-primary/20 data-[state=on]:text-primary data-[state=on]:border-primary/40 border border-border bg-accent/30 text-muted-foreground hover:text-foreground transition-all cursor-pointer">
+              🌐 Todas
+            </ToggleGroupItem>
+            {regions.map((r) => (
+              <ToggleGroupItem
+                key={r.id}
+                value={r.id}
+                className="px-4 py-2 rounded-lg text-xs font-semibold data-[state=on]:bg-primary/20 data-[state=on]:text-primary data-[state=on]:border-primary/40 border border-border bg-accent/30 text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+              >
+                <span className="mr-1.5">{r.flag}</span>
+                {r.label}
+                <span className="ml-1.5 opacity-50">({catalogCards.filter(c => c.region === r.id).length})</span>
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+
+          {/* Sort options */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">Ordenar:</span>
+            {([
+              { key: "name", label: "Nombre" },
+              { key: "price", label: "Precio" },
+              { key: "change", label: "Tendencia" },
+            ] as const).map((opt) => (
+              <button
+                key={opt.key}
+                onClick={() => setSortBy(opt.key)}
+                className={`px-3 py-1 rounded-md text-xs font-medium transition-all cursor-pointer ${
+                  sortBy === opt.key
+                    ? "bg-primary/15 text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </motion.div>
 
         {/* Cards grid */}
         <div>

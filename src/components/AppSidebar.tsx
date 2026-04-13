@@ -13,6 +13,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
+  LogOut,
+  User,
 } from "lucide-react";
 
 const mainNav = [
@@ -32,9 +34,10 @@ const comingSoon = [
 interface AppSidebarProps {
   activeView: string;
   onNavigate: (view: string) => void;
+  onLogout?: () => void;
 }
 
-export function AppSidebar({ activeView, onNavigate }: AppSidebarProps) {
+export function AppSidebar({ activeView, onNavigate, onLogout }: AppSidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
@@ -111,12 +114,47 @@ export function AppSidebar({ activeView, onNavigate }: AppSidebarProps) {
         </div>
       </nav>
 
-      {/* Collapse */}
-      <button onClick={() => setCollapsed(!collapsed)}
-        className="mx-3 mb-4 flex items-center justify-center py-2 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer"
-      >
-        {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-      </button>
+      {/* User & Logout */}
+      <div className="px-3 pb-2 space-y-1">
+        {/* User pill */}
+        <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg">
+          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+            <User className="w-4 h-4 text-primary" />
+          </div>
+          <AnimatePresence>
+            {!collapsed && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="min-w-0">
+                <p className="text-sm font-medium text-foreground truncate">Coleccionista</p>
+                <p className="text-[10px] text-muted-foreground truncate">demo@pokevault.com</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Logout */}
+        {onLogout && (
+          <button
+            onClick={onLogout}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:text-price-down hover:bg-price-down/10 transition-colors cursor-pointer"
+          >
+            <LogOut className="w-5 h-5 shrink-0" />
+            <AnimatePresence>
+              {!collapsed && (
+                <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                  className="text-sm font-medium whitespace-nowrap"
+                >Cerrar Sesión</motion.span>
+              )}
+            </AnimatePresence>
+          </button>
+        )}
+
+        {/* Collapse */}
+        <button onClick={() => setCollapsed(!collapsed)}
+          className="w-full flex items-center justify-center py-2 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer"
+        >
+          {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+        </button>
+      </div>
     </motion.aside>
   );
 }
