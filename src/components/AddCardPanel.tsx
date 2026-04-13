@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { X, Check } from "lucide-react";
-import { conditions, languages, finishes } from "../data/mockData";
+import { conditions, allLanguages, finishes } from "../data/mockData";
 
 interface AddCardPanelProps {
   cardName: string;
@@ -76,7 +76,7 @@ export function AddCardPanel({ cardName, onClose }: AddCardPanelProps) {
               Idioma
             </label>
             <div className="grid grid-cols-3 gap-2">
-              {languages.map((l) => (
+              {allLanguages.map((l) => (
                 <button
                   key={l.code}
                   onClick={() => setLanguage(l.code)}
