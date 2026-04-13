@@ -1,19 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Dashboard } from "../components/Dashboard";
 
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "PokéVault — Tu Colección TCG" },
+      { name: "description", content: "Dashboard premium para coleccionistas de Pokémon TCG con precios en tiempo real" },
+      { property: "og:title", content: "PokéVault — Tu Colección TCG" },
+      { property: "og:description", content: "El centro de mandos definitivo para coleccionistas europeos de Trading Card Games" },
+    ],
+  }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. For sites with multiple pages (About, Services, Contact, etc.),
-// create separate route files (about.tsx, services.tsx, contact.tsx) — don't put all pages in this file.
-function PlaceholderIndex() {
-  return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
-    </div>
-  );
-}
-
 function Index() {
-  return <PlaceholderIndex />;
+  return <Dashboard />;
 }
