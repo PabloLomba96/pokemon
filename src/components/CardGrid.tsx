@@ -33,8 +33,9 @@ export function CardGrid({ cards, onSelectCard }: CardGridProps) {
               <div className="absolute inset-0 holo-effect opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
               {/* Region + language flag badge */}
               <div className="absolute top-1.5 left-1.5 flex items-center gap-1">
-                <span className="bg-background/80 backdrop-blur-sm text-[10px] px-1.5 py-0.5 rounded-md font-semibold">
-                  {getFlagForLanguage(card.language)} {regionInfo?.flag}
+                <span className="bg-background/80 backdrop-blur-sm text-[10px] px-1.5 py-0.5 rounded-md font-semibold flex items-center gap-1">
+                  {getFlagForLanguage(card.language)}
+                  {card.region === "western" && <span>🌍</span>}
                 </span>
               </div>
             </div>
