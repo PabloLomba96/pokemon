@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { X, TrendingUp, TrendingDown, Plus } from "lucide-react";
 import type { PokemonCard } from "../data/mockData";
+import { regions } from "../data/mockData";
 import { PriceSourcePanel } from "./PriceSourcePanel";
 
 interface CardDetailProps {
@@ -104,17 +105,22 @@ export function CardDetail({ card, onClose, onAddToCollection }: CardDetailProps
 
             {/* Info chips */}
             <div className="grid grid-cols-2 gap-3">
-              {[
-                { label: "Rareza", value: card.rarity },
-                { label: "Estado", value: card.condition },
-                { label: "Idioma", value: card.language },
-                { label: "Acabado", value: card.finish },
-              ].map((item) => (
-                <div key={item.label} className="bg-accent/50 rounded-lg p-3">
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{item.label}</p>
-                  <p className="text-sm font-semibold text-foreground">{item.value}</p>
-                </div>
-              ))}
+              {(() => {
+                const regionInfo = regions.find(r => r.id === card.region);
+                return [
+                  { label: "Región", value: `${regionInfo?.flag ?? ''} ${regionInfo?.label ?? card.region}` },
+                  { label: "Rareza", value: card.rarity },
+                  { label: "Estado", value: card.condition },
+                  { label: "Idioma", value: card.language },
+                  { label: "Acabado", value: card.finish },
+                  { label: "Set Code", value: card.setCode },
+                ].map((item) => (
+                  <div key={item.label} className="bg-accent/50 rounded-lg p-3">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{item.label}</p>
+                    <p className="text-sm font-semibold text-foreground">{item.value}</p>
+                  </div>
+                ));
+              })()}
             </div>
 
             {/* Price sources */}
