@@ -1,8 +1,8 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, TrendingUp, TrendingDown, Plus, Globe } from "lucide-react";
-import type { PokemonCard } from "../data/mockData";
-import { regions, languagesByRegion, getFlagForLanguage } from "../data/mockData";
+import type { PokemonCard } from "../types/cards";
+import { regions, languagesByRegion, getFlagForLanguage } from "../constants/cards";
 import { PriceSourcePanel } from "./PriceSourcePanel";
 import { PriceHistoryChart } from "./PriceHistoryChart";
 import { useAppStore } from "../store/useAppStore";

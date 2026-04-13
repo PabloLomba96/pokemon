@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Wallet, Layers, Crown, Settings2, Eye, EyeOff, ChevronUp, ChevronDown, Package, Compass } from "lucide-react";
-import type { PokemonCard } from "../data/mockData";
+import type { PokemonCard } from "../types/cards";
 import { MetricCard } from "./MetricCard";
 import { PortfolioChart } from "./PortfolioChart";
 import { PortfolioInsights } from "./PortfolioInsights";

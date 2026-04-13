@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X } from "lucide-react";
-import type { PokemonCard } from "../data/mockData";
+import type { PokemonCard } from "../types/cards";
 import { usePokemonSearch } from "../hooks/usePokemonSearch";
 import { useAppStore } from "../store/useAppStore";
 import { Skeleton } from "./ui/skeleton";

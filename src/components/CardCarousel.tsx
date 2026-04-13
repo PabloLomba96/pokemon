@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
 import { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import type { PokemonCard } from "../data/mockData";
-import { getFlagForLanguage } from "../data/mockData";
+import type { PokemonCard } from "../types/cards";
+import { getFlagForLanguage } from "../constants/cards";
 
 interface CardCarouselProps {
   cards: PokemonCard[];

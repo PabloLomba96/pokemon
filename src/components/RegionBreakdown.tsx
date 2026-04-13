@@ -1,5 +1,5 @@
-import { regions } from "../data/mockData";
-import type { PokemonCard } from "../data/mockData";
+import { regions } from "../constants/cards";
+import type { PokemonCard } from "../types/cards";
 
 interface RegionBreakdownProps {
   cards: PokemonCard[];

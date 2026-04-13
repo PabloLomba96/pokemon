@@ -1,7 +1,7 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { TrendingUp } from "lucide-react";
-import type { PokemonCard } from "../data/mockData";
-import { regions } from "../data/mockData";
+import type { PokemonCard } from "../types/cards";
+import { regions } from "../constants/cards";
 import { useAppStore } from "../store/useAppStore";
 
 interface PortfolioInsightsProps {

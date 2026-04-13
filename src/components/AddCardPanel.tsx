@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { X, Check } from "lucide-react";
-import { conditions, allLanguages, finishes, gradingCompanies, gradingGrades } from "../data/mockData";
-import type { GradingInfo } from "../data/mockData";
+import { conditions, allLanguages, finishes, gradingCompanies, gradingGrades } from "../constants/cards";
+import type { GradingInfo } from "../types/cards";
 import { Switch } from "./ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 

@@ -14,8 +14,8 @@ import { ProfilePage } from "./ProfilePage";
 import { ComingSoonPage } from "./ComingSoonPage";
 import { EmptyState } from "./EmptyState";
 import { useAppStore } from "../store/useAppStore";
-import type { PokemonCard, CardRegion } from "../data/mockData";
-import { regions } from "../data/mockData";
+import type { PokemonCard, CardRegion } from "../types/cards";
+import { regions } from "../constants/cards";
 import { LayoutGrid, List, Filter } from "lucide-react";
 import { toast } from "sonner";
 
