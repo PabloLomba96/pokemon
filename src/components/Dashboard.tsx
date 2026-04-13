@@ -4,6 +4,7 @@ import { Wallet, Layers, Crown, Settings2, Eye, EyeOff, ChevronUp, ChevronDown, 
 import type { PokemonCard } from "../data/mockData";
 import { MetricCard } from "./MetricCard";
 import { PortfolioChart } from "./PortfolioChart";
+import { PortfolioInsights } from "./PortfolioInsights";
 import { CardCarousel } from "./CardCarousel";
 import { TopCardsWidget } from "./TopCardsWidget";
 import { RegionBreakdown } from "./RegionBreakdown";
@@ -80,6 +81,8 @@ export function Dashboard({ collection, onNavigate }: DashboardProps) {
             <RegionBreakdown cards={collection} />
           </div>
         );
+      case "insights":
+        return <PortfolioInsights cards={collection} />;
       case "recentlyAdded":
         return (
           <div>

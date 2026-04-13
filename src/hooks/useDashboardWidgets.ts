@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export type WidgetType = "metrics" | "chart" | "carousel" | "topCards" | "regionBreakdown" | "recentlyAdded";
+export type WidgetType = "metrics" | "chart" | "carousel" | "topCards" | "regionBreakdown" | "recentlyAdded" | "insights";
 
 export interface DashboardWidget {
   id: string;
@@ -13,10 +13,11 @@ export interface DashboardWidget {
 const defaultWidgets: DashboardWidget[] = [
   { id: "metrics", type: "metrics", label: "Métricas", enabled: true, order: 0 },
   { id: "chart", type: "chart", label: "Gráfica de Evolución", enabled: true, order: 1 },
-  { id: "carousel", type: "carousel", label: "Carrusel de Cartas", enabled: true, order: 2 },
-  { id: "topCards", type: "topCards", label: "Top Cartas Valiosas", enabled: true, order: 3 },
-  { id: "regionBreakdown", type: "regionBreakdown", label: "Desglose por Región", enabled: true, order: 4 },
-  { id: "recentlyAdded", type: "recentlyAdded", label: "Añadidas Recientemente", enabled: true, order: 5 },
+  { id: "insights", type: "insights", label: "Insights del Portafolio", enabled: true, order: 2 },
+  { id: "carousel", type: "carousel", label: "Carrusel de Cartas", enabled: true, order: 3 },
+  { id: "topCards", type: "topCards", label: "Top Cartas Valiosas", enabled: true, order: 4 },
+  { id: "regionBreakdown", type: "regionBreakdown", label: "Desglose por Región", enabled: true, order: 5 },
+  { id: "recentlyAdded", type: "recentlyAdded", label: "Añadidas Recientemente", enabled: true, order: 6 },
 ];
 
 const STORAGE_KEY = "pokevault_widgets";
