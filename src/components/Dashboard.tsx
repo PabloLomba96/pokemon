@@ -17,7 +17,8 @@ export function Dashboard() {
   const [showAddPanel, setShowAddPanel] = useState(false);
   const [addingCardName, setAddingCardName] = useState("");
 
-  const totalValue = mockCards.reduce((sum, c) => sum + c.estimatedPrice, 0);
+const totalValue = mockCards.reduce((sum, c) => sum + c.estimatedPrice, 0);
+  const formatNumber = (n: number) => n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
   const topCard = mockCards.reduce((top, c) => (c.estimatedPrice > top.estimatedPrice ? c : top), mockCards[0]);
 
   const handleAddToCollection = () => {
@@ -59,7 +60,7 @@ export function Dashboard() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <MetricCard
               title="Valor Total"
-              value={`€${totalValue.toLocaleString()}`}
+              value={`€${formatNumber(totalValue)}`}
               change={5.8}
               icon={Wallet}
               accentClass="text-neon-gold"

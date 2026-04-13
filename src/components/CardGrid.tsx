@@ -33,7 +33,7 @@ export function CardGrid({ cards, onSelectCard }: CardGridProps) {
           <p className="text-xs text-muted-foreground">{card.set}</p>
           <div className="flex items-center justify-between mt-2">
             <span className="text-sm font-bold text-neon-gold text-glow-gold">
-              €{card.estimatedPrice.toLocaleString()}
+              €{card.estimatedPrice.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
             </span>
             <span className={`flex items-center gap-0.5 text-xs font-medium ${card.priceChange >= 0 ? "text-price-up" : "text-price-down"}`}>
               {card.priceChange >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}

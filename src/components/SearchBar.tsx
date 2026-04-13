@@ -56,7 +56,7 @@ export function SearchBar({ onSelectCard }: SearchBarProps) {
                   <p className="text-sm font-semibold text-foreground truncate">{card.name}</p>
                   <p className="text-xs text-muted-foreground">{card.set} — {card.number}</p>
                 </div>
-                <span className="text-sm font-bold text-neon-gold">€{card.estimatedPrice.toLocaleString()}</span>
+                <span className="text-sm font-bold text-neon-gold">€{card.estimatedPrice.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}</span>
               </button>
             ))}
           </motion.div>

@@ -100,7 +100,7 @@ export function PriceSourcePanel({ tcgPrice, cardmarketPrice, ebayPrice, onPrice
                 exit={{ opacity: 0, scale: 0.8 }}
                 className="text-sm font-semibold text-neon-gold"
               >
-                €{src.price.toLocaleString()}
+                €{src.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
               </motion.span>
             )}
           </AnimatePresence>
