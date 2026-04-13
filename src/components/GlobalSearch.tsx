@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { catalogCards } from "../data/mockData";
 import type { PokemonCard } from "../data/mockData";
 import { getFlagForLanguage } from "../data/mockData";
 import { usePokemonSearch } from "../hooks/usePokemonSearch";
@@ -11,7 +10,7 @@ import {
   CommandItem,
   CommandList,
 } from "./ui/command";
-import { Search, Loader2 } from "lucide-react";
+import { Search } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import { Skeleton } from "./ui/skeleton";
 
@@ -28,9 +27,6 @@ export function GlobalSearch({ onSelectCard }: GlobalSearchProps) {
 
   const { results: apiResults, isLoading } = usePokemonSearch(query, 300);
   const isSearching = query.trim().length >= 2;
-
-  // Combine: show API results when searching, catalog otherwise
-  const displayCards = isSearching ? apiResults : catalogCards;
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -75,38 +71,39 @@ export function GlobalSearch({ onSelectCard }: GlobalSearchProps) {
                 </div>
               ))}
             </div>
+          ) : !isSearching ? (
+            <CommandEmpty>Escribe al menos 2 caracteres para buscar.</CommandEmpty>
+          ) : apiResults.length === 0 ? (
+            <CommandEmpty>No se encontraron cartas.</CommandEmpty>
           ) : (
-            <>
-              <CommandEmpty>No se encontraron cartas.</CommandEmpty>
-              <CommandGroup heading={isSearching ? `Resultados API (${displayCards.length})` : "Catálogo"}>
-                {displayCards.slice(0, 20).map((card) => (
-                  <CommandItem
-                    key={card.id}
-                    value={`${card.name} ${card.set} ${card.number}`}
-                    onSelect={() => {
-                      onSelectCard(card);
-                      setOpen(false);
-                      setQuery("");
-                    }}
-                    className="cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3 w-full">
-                      <img src={card.image} alt={card.name} className="w-8 h-11 object-contain rounded" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold truncate">{card.name}</p>
-                        <p className="text-xs text-muted-foreground">{card.set} · {card.number}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[11px]">{getFlagForLanguage(card.language)}</span>
-                        {card.estimatedPrice > 0 && (
-                          <span className="text-xs font-bold text-neon-gold">{sym}{formatNum(card.estimatedPrice)}</span>
-                        )}
-                      </div>
+            <CommandGroup heading={`Resultados API (${apiResults.length})`}>
+              {apiResults.slice(0, 20).map((card: PokemonCard) => (
+                <CommandItem
+                  key={card.id}
+                  value={`${card.name} ${card.set} ${card.number}`}
+                  onSelect={() => {
+                    onSelectCard(card);
+                    setOpen(false);
+                    setQuery("");
+                  }}
+                  className="cursor-pointer"
+                >
+                  <div className="flex items-center gap-3 w-full">
+                    <img src={card.image} alt={card.name} className="w-8 h-11 object-contain rounded" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold truncate">{card.name}</p>
+                      <p className="text-xs text-muted-foreground">{card.set} · {card.number}</p>
                     </div>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px]">{getFlagForLanguage(card.language)}</span>
+                      {card.estimatedPrice > 0 && (
+                        <span className="text-xs font-bold text-neon-gold">{sym}{formatNum(card.estimatedPrice)}</span>
+                      )}
+                    </div>
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
           )}
         </CommandList>
       </CommandDialog>

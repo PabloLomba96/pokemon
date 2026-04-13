@@ -1,11 +1,22 @@
 import { motion } from "framer-motion";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { portfolioHistory } from "../data/mockData";
 import { useAppStore } from "../store/useAppStore";
 
 export function PortfolioChart() {
-  const { preferences } = useAppStore();
+  const { preferences, collection } = useAppStore();
   const sym = preferences.currencySymbol;
+
+  // Generate portfolio history from collection data
+  const totalValue = collection.reduce((sum, c) => sum + c.estimatedPrice, 0);
+  const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun"];
+  const portfolioHistory = months.map((month, i) => {
+    // Simulate growth curve ending at current value
+    const factor = 0.7 + (i / (months.length - 1)) * 0.3;
+    const noise = 1 + (Math.sin(i * 2.5) * 0.05);
+    return { month, value: Math.round(totalValue * factor * noise) };
+  });
+
+  if (collection.length === 0) return null;
 
   return (
     <motion.div
