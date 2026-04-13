@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Crown, TrendingUp, TrendingDown } from "lucide-react";
-import type { PokemonCard } from "../data/mockData";
-import { getFlagForLanguage } from "../data/mockData";
+import type { PokemonCard } from "../types/cards";
+import { getFlagForLanguage } from "../constants/cards";
 import { useAppStore } from "../store/useAppStore";
 
 interface TopCardsWidgetProps {

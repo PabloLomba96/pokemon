@@ -13,8 +13,8 @@ interface PriceSource {
 }
 
 interface PriceSourcePanelProps {
-  tcgPrice: number;
-  cardmarketPrice: number;
+  tcgPrice: number | null;
+  cardmarketPrice: number | null;
   ebayPrice: number | null;
   onPriceChange: (newPrice: number) => void;
 }
@@ -24,9 +24,9 @@ export function PriceSourcePanel({ tcgPrice, cardmarketPrice, ebayPrice, onPrice
   const sym = preferences.currencySymbol;
 
   const sources: PriceSource[] = [
-    { id: "tcg", label: "Pokémon TCG API", price: tcgPrice, tooltip: "Datos proporcionados por Pokémon TCG API. Actualizado hace 2h", defaultOn: true },
-    { id: "cardmarket", label: "Cardmarket", price: cardmarketPrice, tooltip: "Datos proporcionados por Cardmarket (Europa). Actualizado hace 1h", defaultOn: true },
-    { id: "ebay", label: "eBay (Vendidos)", price: ebayPrice, tooltip: "Datos de últimas ventas en eBay. Actualizado hace 4h", defaultOn: false },
+    { id: "tcg", label: "Pokémon TCG API", price: tcgPrice, tooltip: tcgPrice !== null ? "Datos proporcionados por Pokémon TCG API" : "Dato no disponible — API no devuelve precio para esta carta", defaultOn: tcgPrice !== null },
+    { id: "cardmarket", label: "Cardmarket", price: cardmarketPrice, tooltip: cardmarketPrice !== null ? "Datos proporcionados por Cardmarket (Europa)" : "Dato no disponible — Sin datos de Cardmarket", defaultOn: cardmarketPrice !== null },
+    { id: "ebay", label: "eBay (Vendidos)", price: ebayPrice, tooltip: ebayPrice !== null ? "Datos de últimas ventas en eBay" : "Dato no disponible — Requiere integración con eBay API", defaultOn: false },
     { id: "internal", label: "Mercado Interno", price: null, tooltip: "Próximamente — Datos del marketplace interno de PokéVault", locked: true, defaultOn: false },
   ];
 
@@ -96,15 +96,18 @@ export function PriceSourcePanel({ tcgPrice, cardmarketPrice, ebayPrice, onPrice
             </div>
           </div>
           <AnimatePresence mode="wait">
-            {src.price !== null && !src.locked && (
+            {!src.locked && (
               <motion.span
                 key={active[src.id] ? "on" : "off"}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: active[src.id] ? 1 : 0.3, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
-                className="text-sm font-semibold text-neon-gold"
+                className={`text-sm font-semibold ${src.price !== null ? "text-neon-gold" : "text-muted-foreground italic"}`}
               >
-                {sym}{src.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+                {src.price !== null
+                  ? `${sym}${src.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`
+                  : "No disponible"
+                }
               </motion.span>
             )}
           </AnimatePresence>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import type { PokemonCard } from "../data/mockData";
-import { getFlagForLanguage } from "../data/mockData";
+import type { PokemonCard } from "../types/cards";
+import { getFlagForLanguage } from "../constants/cards";
 import { usePokemonSearch } from "../hooks/usePokemonSearch";
 import {
   CommandDialog,

@@ -1,43 +1,4 @@
-export type CardRegion = "western" | "japanese" | "korean" | "chinese";
-
-export interface PriceDetail {
-  trendPrice: number;
-  lowPrice: number;
-  avg1Day: number | null;
-  avg7Day: number | null;
-  avg30Day: number | null;
-  source: string;
-}
-
-export interface GradingInfo {
-  company: "PSA" | "BGS" | "CGC" | "PCA";
-  grade: number;
-}
-
-export interface PokemonCard {
-  id: string;
-  name: string;
-  set: string;
-  setCode: string;
-  number: string;
-  rarity: string;
-  era: string;
-  image: string;
-  condition: string;
-  language: string;
-  region: CardRegion;
-  finish: string;
-  grading?: GradingInfo;
-  prices: {
-    tcgApi: number;
-    cardmarket: number;
-    ebay: number | null;
-  };
-  priceDetails: PriceDetail[];
-  estimatedPrice: number;
-  priceChange: number;
-  dateAdded: string;
-}
+import type { CardRegion } from "../types/cards";
 
 export const gradingCompanies = ["PSA", "BGS", "CGC", "PCA"] as const;
 export const gradingGrades = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10] as const;

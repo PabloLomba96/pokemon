@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { TrendingUp, TrendingDown } from "lucide-react";
-import type { PokemonCard } from "../data/mockData";
-import { getFlagForLanguage, regions } from "../data/mockData";
+import type { PokemonCard } from "../types/cards";
+import { getFlagForLanguage, regions } from "../constants/cards";
 import { useAppStore } from "../store/useAppStore";
 import {
   Table,

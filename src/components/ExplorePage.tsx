@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Sparkles, SlidersHorizontal } from "lucide-react";
-import { regions } from "../data/mockData";
-import type { PokemonCard, CardRegion } from "../data/mockData";
+import { regions } from "../constants/cards";
+import type { PokemonCard, CardRegion } from "../types/cards";
 import { CardGrid } from "./CardGrid";
 import { CardDetail } from "./CardDetail";
 import { AddCardPanel } from "./AddCardPanel";
