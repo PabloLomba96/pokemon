@@ -49,6 +49,7 @@ export const catalogCards: PokemonCard[] = [
     setCode: "BS",
     number: "4/102",
     rarity: "Holo Rare",
+    era: "Classic (Base-Neo)",
     image: "https://images.pokemontcg.io/base1/4_hires.png",
     condition: "Near Mint",
     language: "EN",
