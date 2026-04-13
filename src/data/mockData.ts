@@ -287,9 +287,11 @@ export const languagesByRegion: Record<CardRegion, typeof allLanguages[number][]
   chinese: [{ code: "ZH-S", label: "简体中文", flag: "🇨🇳" }, { code: "ZH-T", label: "繁體中文", flag: "🇹🇼" }],
 };
 
-export function getFlagForLanguage(langCode: string): string {
-  const found = allLanguages.find(l => l.code === langCode);
-  return found?.flag ?? "🏳️";
+export function getFlagForLanguage(langCodeOrName: string): string {
+  const found = allLanguages.find(
+    l => l.code === langCodeOrName || l.label.toLowerCase() === langCodeOrName.toLowerCase()
+  );
+  return found?.flag ?? "";
 }
 
 export const finishes = ["Normal", "Holo", "Reverse Holo", "Full Art", "Alternate Art", "Rainbow Rare", "Gold"] as const;
