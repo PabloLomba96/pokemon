@@ -1,4 +1,4 @@
-import type { PokemonCard, CardRegion } from "../data/mockData";
+import type { PokemonCard, CardRegion } from "../types/cards";
 
 const BASE_URL = "https://api.pokemontcg.io/v2";
 
@@ -56,42 +56,44 @@ function mapEra(series: string): string {
   return eraMap[series] ?? series;
 }
 
+// Japanese sets use specific prefixes in the API
+const JAPANESE_SET_PREFIXES = [
+  "sv", "s", "sm", "xy", "bw", "dp", "pcg", "web", "vs",
+  // but exclude western sv sets
+];
+
 function detectRegion(card: ApiCard): CardRegion {
-  // The public API mainly has western cards
+  const setId = card.set.id.toLowerCase();
+  // Japanese sets typically have specific IDs
+  if (setId.startsWith("sv") && setId.match(/^sv\d/)) return "western"; // sv1, sv2, etc are western
+  if (setId.match(/^s\d/) || setId.match(/^sm\d/) || setId.match(/^xy\d/)) return "japanese";
   return "western";
 }
 
-function detectLanguage(_card: ApiCard): string {
+function detectLanguage(card: ApiCard): string {
+  const region = detectRegion(card);
+  if (region === "japanese") return "JP";
+  if (region === "korean") return "KR";
+  if (region === "chinese") return "ZH-S";
   return "EN";
-}
-
-function extractPrice(card: ApiCard): number {
-  // Prefer cardmarket trend, then tcgplayer market
-  if (card.cardmarket?.prices?.trendPrice) {
-    return Math.round(card.cardmarket.prices.trendPrice * 100); // cents
-  }
-  if (card.tcgplayer?.prices) {
-    const firstKey = Object.keys(card.tcgplayer.prices)[0];
-    if (firstKey) {
-      const market = card.tcgplayer.prices[firstKey]?.market;
-      if (market) return Math.round(market * 100);
-    }
-  }
-  return 0;
 }
 
 function mapApiCard(api: ApiCard): PokemonCard {
   const cmPrices = api.cardmarket?.prices;
-  const trendCents = cmPrices?.trendPrice ? Math.round(cmPrices.trendPrice * 100) : 0;
-  const lowCents = cmPrices?.lowPrice ? Math.round(cmPrices.lowPrice * 100) : 0;
+  const trendCents = cmPrices?.trendPrice ? Math.round(cmPrices.trendPrice * 100) : null;
+  const lowCents = cmPrices?.lowPrice ? Math.round(cmPrices.lowPrice * 100) : null;
 
-  let tcgPrice = 0;
+  let tcgPrice: number | null = null;
   if (api.tcgplayer?.prices) {
     const firstKey = Object.keys(api.tcgplayer.prices)[0];
-    if (firstKey) tcgPrice = Math.round((api.tcgplayer.prices[firstKey]?.market ?? 0) * 100);
+    if (firstKey) {
+      const market = api.tcgplayer.prices[firstKey]?.market;
+      if (market) tcgPrice = Math.round(market * 100);
+    }
   }
 
-  const estimatedPrice = trendCents || tcgPrice || 0;
+  // Use first available real price as estimated
+  const estimatedPrice = trendCents ?? tcgPrice ?? 0;
 
   return {
     id: api.id,
@@ -109,29 +111,45 @@ function mapApiCard(api: ApiCard): PokemonCard {
     prices: {
       tcgApi: tcgPrice,
       cardmarket: trendCents,
-      ebay: null,
+      ebay: null, // No eBay data from this API
     },
     priceDetails: cmPrices ? [{
-      trendPrice: trendCents,
-      lowPrice: lowCents,
+      trendPrice: trendCents ?? 0,
+      lowPrice: lowCents ?? 0,
       avg1Day: cmPrices.avg1 ? Math.round(cmPrices.avg1 * 100) : null,
       avg7Day: cmPrices.avg7 ? Math.round(cmPrices.avg7 * 100) : null,
       avg30Day: cmPrices.avg30 ? Math.round(cmPrices.avg30 * 100) : null,
       source: "Cardmarket",
     }] : [],
     estimatedPrice,
-    priceChange: Math.round((Math.random() * 20 - 5) * 10) / 10, // simulated
+    priceChange: 0, // No real historical data from this API
     dateAdded: new Date().toISOString().split("T")[0],
   };
 }
 
-export async function searchCards(query: string, page = 1, pageSize = 20): Promise<{
+export interface SearchOptions {
+  query: string;
+  region?: CardRegion | "all";
+  page?: number;
+  pageSize?: number;
+}
+
+export async function searchCards(opts: SearchOptions): Promise<{
   cards: PokemonCard[];
   totalCount: number;
 }> {
+  const { query, region = "all", page = 1, pageSize = 20 } = opts;
   if (!query.trim()) return { cards: [], totalCount: 0 };
 
-  const url = `${BASE_URL}/cards?q=name:"${encodeURIComponent(query)}*"&page=${page}&pageSize=${pageSize}&orderBy=name`;
+  // Build query string with region filtering
+  let q = `name:"${query}*"`;
+
+  // The Pokémon TCG API doesn't have a direct language filter,
+  // but Japanese sets have specific set IDs we can filter on
+  // For now, we filter client-side after fetch to keep it simple
+  // and because the API's set categorization isn't 100% aligned with our regions
+
+  const url = `${BASE_URL}/cards?q=${encodeURIComponent(q)}&page=${page}&pageSize=${pageSize}&orderBy=name`;
 
   const res = await fetch(url);
   if (!res.ok) {
@@ -140,8 +158,15 @@ export async function searchCards(query: string, page = 1, pageSize = 20): Promi
   }
 
   const data: ApiResponse = await res.json();
+  let cards = data.data.map(mapApiCard);
+
+  // Client-side region filter
+  if (region !== "all") {
+    cards = cards.filter(c => c.region === region);
+  }
+
   return {
-    cards: data.data.map(mapApiCard),
+    cards,
     totalCount: data.totalCount,
   };
 }
@@ -151,4 +176,25 @@ export async function getCardById(id: string): Promise<PokemonCard | null> {
   if (!res.ok) return null;
   const data = await res.json();
   return mapApiCard(data.data);
+}
+
+/**
+ * Batch fetch cards by their API IDs (for hydrating collection from DB)
+ */
+export async function getCardsByIds(ids: string[]): Promise<Map<string, PokemonCard>> {
+  if (ids.length === 0) return new Map();
+
+  // API supports OR queries: id:"base1-4" OR id:"swsh7-215"
+  const idQuery = ids.map(id => `id:"${id}"`).join(" OR ");
+  const url = `${BASE_URL}/cards?q=${encodeURIComponent(idQuery)}&pageSize=${Math.min(ids.length, 250)}`;
+
+  const res = await fetch(url);
+  if (!res.ok) return new Map();
+
+  const data: ApiResponse = await res.json();
+  const map = new Map<string, PokemonCard>();
+  for (const card of data.data) {
+    map.set(card.id, mapApiCard(card));
+  }
+  return map;
 }

@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import type { PokemonCard } from "../data/mockData";
+import type { PokemonCard, CardRegion } from "../types/cards";
 import { searchCards } from "../services/pokemonApi";
 
-export function usePokemonSearch(query: string, debounceMs = 400) {
+export function usePokemonSearch(query: string, debounceMs = 400, region: CardRegion | "all" = "all") {
   const [results, setResults] = useState<PokemonCard[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +26,7 @@ export function usePokemonSearch(query: string, debounceMs = 400) {
       setError(null);
 
       try {
-        const data = await searchCards(query, 1, 40);
+        const data = await searchCards({ query, region, page: 1, pageSize: 40 });
         if (!controller.signal.aborted) {
           setResults(data.cards);
           setTotalCount(data.totalCount);
@@ -45,7 +45,7 @@ export function usePokemonSearch(query: string, debounceMs = 400) {
     }, debounceMs);
 
     return () => clearTimeout(timer);
-  }, [query, debounceMs]);
+  }, [query, debounceMs, region]);
 
   return { results, isLoading, error, totalCount };
 }
