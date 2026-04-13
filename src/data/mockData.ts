@@ -39,7 +39,8 @@ export const regions: { id: CardRegion; label: string; flag: string; description
   { id: "chinese", label: "China", flag: "🇨🇳", description: "S-Chinese/T-Chinese, sellos de autenticidad propios" },
 ];
 
-export const mockCards: PokemonCard[] = [
+/** Catalog cards — these are the "database" of available cards */
+export const catalogCards: PokemonCard[] = [
   {
     id: "base1-4",
     name: "Charizard",
@@ -161,7 +162,6 @@ export const mockCards: PokemonCard[] = [
     priceChange: -0.5,
     dateAdded: "2024-05-12",
   },
-  // === Japanese Line ===
   {
     id: "s8b-272",
     name: "Rayquaza VMAX",
@@ -202,7 +202,6 @@ export const mockCards: PokemonCard[] = [
     priceChange: 4.7,
     dateAdded: "2024-07-15",
   },
-  // === Korean Line ===
   {
     id: "s8bk-272",
     name: "Mew VMAX",
@@ -223,7 +222,6 @@ export const mockCards: PokemonCard[] = [
     priceChange: 2.5,
     dateAdded: "2024-08-10",
   },
-  // === Chinese Line ===
   {
     id: "cs5c-079",
     name: "Charizard ex",
@@ -245,6 +243,9 @@ export const mockCards: PokemonCard[] = [
     dateAdded: "2024-09-01",
   },
 ];
+
+/** Backward compat alias */
+export const mockCards = catalogCards;
 
 export const portfolioHistory = [
   { month: "Oct", value: 82000 },
@@ -286,7 +287,6 @@ export const languagesByRegion: Record<CardRegion, typeof allLanguages[number][]
   chinese: [{ code: "ZH-S", label: "简体中文", flag: "🇨🇳" }, { code: "ZH-T", label: "繁體中文", flag: "🇹🇼" }],
 };
 
-/** Helper: get flag emoji for a language code */
 export function getFlagForLanguage(langCode: string): string {
   const found = allLanguages.find(l => l.code === langCode);
   return found?.flag ?? "🏳️";
