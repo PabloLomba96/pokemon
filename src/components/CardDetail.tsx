@@ -4,7 +4,6 @@ import { X, TrendingUp, TrendingDown, Plus } from "lucide-react";
 import type { PokemonCard } from "../data/mockData";
 import { regions } from "../data/mockData";
 import { PriceSourcePanel } from "./PriceSourcePanel";
-import { PriceSourcePanel } from "./PriceSourcePanel";
 
 interface CardDetailProps {
   card: PokemonCard;
