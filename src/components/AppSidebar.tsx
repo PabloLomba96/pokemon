@@ -15,13 +15,16 @@ import {
   Sparkles,
   LogOut,
   User,
+  Settings,
 } from "lucide-react";
+import { useAppStore } from "../store/useAppStore";
 
 const mainNav = [
   { icon: Compass, label: "Explorar", id: "explore" },
   { icon: LayoutDashboard, label: "Dashboard", id: "dashboard" },
   { icon: Library, label: "Colección", id: "collection" },
   { icon: Search, label: "Buscador", id: "search" },
+  { icon: Settings, label: "Perfil", id: "profile" },
 ];
 
 const comingSoon = [
@@ -39,6 +42,7 @@ interface AppSidebarProps {
 
 export function AppSidebar({ activeView, onNavigate, onLogout }: AppSidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
+  const { preferences } = useAppStore();
 
   return (
     <motion.aside
@@ -116,22 +120,23 @@ export function AppSidebar({ activeView, onNavigate, onLogout }: AppSidebarProps
 
       {/* User & Logout */}
       <div className="px-3 pb-2 space-y-1">
-        {/* User pill */}
-        <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg">
+        <button
+          onClick={() => onNavigate("profile")}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-accent transition-colors cursor-pointer"
+        >
           <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
             <User className="w-4 h-4 text-primary" />
           </div>
           <AnimatePresence>
             {!collapsed && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">Coleccionista</p>
-                <p className="text-[10px] text-muted-foreground truncate">demo@pokevault.com</p>
+                <p className="text-sm font-medium text-foreground truncate">{preferences.displayName}</p>
+                <p className="text-[10px] text-muted-foreground truncate">{preferences.email}</p>
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
+        </button>
 
-        {/* Logout */}
         {onLogout && (
           <button
             onClick={onLogout}
@@ -148,7 +153,6 @@ export function AppSidebar({ activeView, onNavigate, onLogout }: AppSidebarProps
           </button>
         )}
 
-        {/* Collapse */}
         <button onClick={() => setCollapsed(!collapsed)}
           className="w-full flex items-center justify-center py-2 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer"
         >

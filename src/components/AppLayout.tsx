@@ -6,42 +6,66 @@ import { ExplorePage } from "./ExplorePage";
 import { CardGrid } from "./CardGrid";
 import { CollectionTableView } from "./CollectionTableView";
 import { CardDetail } from "./CardDetail";
+import { AddCardPanel } from "./AddCardPanel";
 import { SearchBar } from "./SearchBar";
 import { AuthPage } from "./AuthPage";
-import { useCollection } from "../hooks/useCollection";
+import { ProfilePage } from "./ProfilePage";
+import { useAppStore } from "../store/useAppStore";
 import type { PokemonCard, CardRegion } from "../data/mockData";
 import { catalogCards, regions } from "../data/mockData";
 import { LayoutGrid, List, Filter } from "lucide-react";
+import { toast } from "sonner";
 
 export function AppLayout() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { isAuthenticated, login, logout, collection, addCard } = useAppStore();
   const [activeView, setActiveView] = useState("explore");
   const [selectedCard, setSelectedCard] = useState<PokemonCard | null>(null);
   const [collectionViewMode, setCollectionViewMode] = useState<"grid" | "table">("grid");
   const [collectionRegion, setCollectionRegion] = useState<CardRegion | "all">("all");
-  const { collection, addCard } = useCollection();
+  const [showAddPanel, setShowAddPanel] = useState(false);
+  const [addingCard, setAddingCard] = useState<PokemonCard | null>(null);
 
   if (!isAuthenticated) {
-    return <AuthPage onLogin={() => setIsAuthenticated(true)} />;
+    return <AuthPage onLogin={login} />;
   }
 
   const filteredCollection = collectionRegion === "all"
     ? collection
     : collection.filter((c) => c.region === collectionRegion);
 
+  const handleAddFromDetail = () => {
+    if (selectedCard) {
+      setAddingCard(selectedCard);
+      setSelectedCard(null);
+      setShowAddPanel(true);
+    }
+  };
+
+  const handleConfirmAdd = (card: PokemonCard) => {
+    addCard(card);
+    toast.success(`${card.name} añadida a tu colección`, {
+      description: `${card.set} — ${card.number}`,
+    });
+    setShowAddPanel(false);
+    setAddingCard(null);
+  };
+
   return (
     <div className="flex min-h-screen bg-background">
       <AppSidebar
         activeView={activeView}
         onNavigate={setActiveView}
-        onLogout={() => setIsAuthenticated(false)}
+        onLogout={logout}
       />
 
       <main className="flex-1 min-w-0">
         <AnimatePresence mode="wait">
           {activeView === "explore" && (
             <motion.div key="explore" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <ExplorePage onAddToCollection={addCard} />
+              <ExplorePage onAddToCollection={(card) => {
+                addCard(card);
+                toast.success(`${card.name} añadida a tu colección`, { description: `${card.set} — ${card.number}` });
+              }} />
             </motion.div>
           )}
 
@@ -63,7 +87,6 @@ export function AppLayout() {
                   <h1 className="text-lg font-bold text-foreground">Mi Colección</h1>
                   <div className="flex items-center gap-3">
                     <SearchBar onSelectCard={setSelectedCard} />
-                    {/* View mode toggle */}
                     <div className="flex items-center border border-border rounded-lg overflow-hidden">
                       <button
                         onClick={() => setCollectionViewMode("grid")}
@@ -83,7 +106,6 @@ export function AppLayout() {
               </header>
 
               <div className="p-6">
-                {/* Region filter for collection */}
                 <div className="flex items-center gap-2 flex-wrap mb-6">
                   <Filter className="w-4 h-4 text-muted-foreground" />
                   <button
@@ -143,12 +165,35 @@ export function AppLayout() {
               </div>
             </motion.div>
           )}
+
+          {activeView === "profile" && (
+            <motion.div key="profile" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">
+                <div className="flex items-center px-6 h-16">
+                  <h1 className="text-lg font-bold text-foreground">Perfil & Preferencias</h1>
+                </div>
+              </header>
+              <ProfilePage />
+            </motion.div>
+          )}
         </AnimatePresence>
       </main>
 
+      {/* Card detail modal */}
       <AnimatePresence>
         {selectedCard && (
-          <CardDetail card={selectedCard} onClose={() => setSelectedCard(null)} />
+          <CardDetail card={selectedCard} onClose={() => setSelectedCard(null)} onAddToCollection={handleAddFromDetail} />
+        )}
+      </AnimatePresence>
+
+      {/* Add panel */}
+      <AnimatePresence>
+        {showAddPanel && addingCard && (
+          <AddCardPanel
+            cardName={addingCard.name}
+            onClose={() => setShowAddPanel(false)}
+            onConfirmAdd={() => handleConfirmAdd(addingCard)}
+          />
         )}
       </AnimatePresence>
     </div>

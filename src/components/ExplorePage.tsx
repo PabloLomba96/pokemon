@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Sparkles, TrendingUp, SlidersHorizontal } from "lucide-react";
-import { catalogCards, regions, getFlagForLanguage } from "../data/mockData";
+import { Search, Sparkles, TrendingUp, SlidersHorizontal, Badge } from "lucide-react";
+import { catalogCards, regions } from "../data/mockData";
 import type { PokemonCard, CardRegion } from "../data/mockData";
 import { CardGrid } from "./CardGrid";
 import { CardDetail } from "./CardDetail";
 import { AddCardPanel } from "./AddCardPanel";
+import { AdvancedFilters } from "./AdvancedFilters";
 import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group";
+import { toast } from "sonner";
 
 interface ExplorePageProps {
   onAddToCollection?: (card: PokemonCard) => void;
@@ -20,9 +22,19 @@ export function ExplorePage({ onAddToCollection }: ExplorePageProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"name" | "price" | "change">("name");
 
+  // Advanced filters
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [selectedEras, setSelectedEras] = useState<string[]>([]);
+  const [selectedSets, setSelectedSets] = useState<string[]>([]);
+  const [selectedRarities, setSelectedRarities] = useState<string[]>([]);
+
+  const advancedCount = selectedEras.length + selectedSets.length + selectedRarities.length;
+
   const filtered = catalogCards
     .filter((c) => activeRegion === "all" || c.region === activeRegion)
     .filter((c) => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    .filter((c) => selectedSets.length === 0 || selectedSets.includes(c.set))
+    .filter((c) => selectedRarities.length === 0 || selectedRarities.includes(c.rarity))
     .sort((a, b) => {
       if (sortBy === "price") return b.estimatedPrice - a.estimatedPrice;
       if (sortBy === "change") return b.priceChange - a.priceChange;
@@ -114,9 +126,23 @@ export function ExplorePage({ onAddToCollection }: ExplorePageProps) {
           transition={{ delay: 0.25 }}
           className="gradient-card rounded-xl p-4 space-y-4"
         >
-          <div className="flex items-center gap-2 mb-1">
-            <SlidersHorizontal className="w-4 h-4 text-muted-foreground" />
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Filtros de Región & Numeración</h3>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <SlidersHorizontal className="w-4 h-4 text-muted-foreground" />
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Filtros de Región & Numeración</h3>
+            </div>
+            <button
+              onClick={() => setShowAdvanced(true)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20 transition-all cursor-pointer"
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              Filtros Avanzados
+              {advancedCount > 0 && (
+                <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                  {advancedCount}
+                </span>
+              )}
+            </button>
           </div>
 
           {/* Region ToggleGroup */}
@@ -163,6 +189,18 @@ export function ExplorePage({ onAddToCollection }: ExplorePageProps) {
               </button>
             ))}
           </div>
+
+          {/* Active advanced filter tags */}
+          {advancedCount > 0 && (
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Activos:</span>
+              {[...selectedEras, ...selectedSets, ...selectedRarities].map((tag) => (
+                <span key={tag} className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-primary/10 text-primary border border-primary/20">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
         </motion.div>
 
         {/* Cards grid */}
@@ -176,6 +214,18 @@ export function ExplorePage({ onAddToCollection }: ExplorePageProps) {
           )}
         </div>
       </div>
+
+      {/* Advanced filters sheet */}
+      <AdvancedFilters
+        open={showAdvanced}
+        onOpenChange={setShowAdvanced}
+        selectedEras={selectedEras}
+        selectedSets={selectedSets}
+        selectedRarities={selectedRarities}
+        onErasChange={setSelectedEras}
+        onSetsChange={setSelectedSets}
+        onRaritiesChange={setSelectedRarities}
+      />
 
       {/* Card detail modal */}
       <AnimatePresence>
