@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import type { PokemonCard } from "../data/mockData";
 import { getFlagForLanguage, regions } from "../data/mockData";
+import { useAppStore } from "../store/useAppStore";
 import {
   Table,
   TableBody,
@@ -17,6 +18,8 @@ interface CollectionTableViewProps {
 }
 
 export function CollectionTableView({ cards, onSelectCard }: CollectionTableViewProps) {
+  const { preferences } = useAppStore();
+  const sym = preferences.currencySymbol;
   const formatNum = (n: number) => n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 
   return (
@@ -40,7 +43,6 @@ export function CollectionTableView({ cards, onSelectCard }: CollectionTableView
         <TableBody>
           {cards.map((card, i) => {
             const regionInfo = regions.find((r) => r.id === card.region);
-            // Simulate a purchase cost as ~85-95% of current price
             const purchaseCost = Math.round(card.estimatedPrice * (0.85 + (i % 10) * 0.01));
             const profit = card.estimatedPrice - purchaseCost;
             const profitPct = ((profit / purchaseCost) * 100).toFixed(1);
@@ -52,7 +54,6 @@ export function CollectionTableView({ cards, onSelectCard }: CollectionTableView
                 onClick={() => onSelectCard(card)}
                 className="border-border cursor-pointer hover:bg-accent/30 transition-colors"
               >
-                {/* Card */}
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <img
@@ -70,7 +71,6 @@ export function CollectionTableView({ cards, onSelectCard }: CollectionTableView
                   </div>
                 </TableCell>
 
-                {/* Region / Language */}
                 <TableCell>
                   <div className="flex items-center gap-1.5">
                     <span className="text-sm">{getFlagForLanguage(card.language)}</span>
@@ -79,31 +79,27 @@ export function CollectionTableView({ cards, onSelectCard }: CollectionTableView
                   </div>
                 </TableCell>
 
-                {/* Condition */}
                 <TableCell>
                   <span className="text-xs font-medium px-2 py-1 rounded-md bg-accent/50 text-foreground">
                     {card.condition}
                   </span>
                 </TableCell>
 
-                {/* Finish */}
                 <TableCell>
                   <span className="text-xs text-muted-foreground">{card.finish}</span>
                 </TableCell>
 
-                {/* Value */}
                 <TableCell className="text-right">
-                  <span className="text-sm font-bold text-neon-gold">€{formatNum(card.estimatedPrice)}</span>
+                  <span className="text-sm font-bold text-neon-gold">{sym}{formatNum(card.estimatedPrice)}</span>
                 </TableCell>
 
-                {/* Profit */}
                 <TableCell className="text-right">
                   <div className={`flex items-center justify-end gap-1 text-xs font-semibold ${isPositive ? "text-price-up" : "text-price-down"}`}>
                     {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                     {isPositive ? "+" : ""}{profitPct}%
                   </div>
                   <p className="text-[10px] text-muted-foreground mt-0.5">
-                    €{formatNum(purchaseCost)} → €{formatNum(card.estimatedPrice)}
+                    {sym}{formatNum(purchaseCost)} → {sym}{formatNum(card.estimatedPrice)}
                   </p>
                 </TableCell>
               </TableRow>

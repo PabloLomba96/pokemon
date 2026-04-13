@@ -16,6 +16,7 @@ export interface PokemonCard {
   setCode: string;
   number: string;
   rarity: string;
+  era: string;
   image: string;
   condition: string;
   language: string;
@@ -48,6 +49,7 @@ export const catalogCards: PokemonCard[] = [
     setCode: "BS",
     number: "4/102",
     rarity: "Holo Rare",
+    era: "Classic (Base-Neo)",
     image: "https://images.pokemontcg.io/base1/4_hires.png",
     condition: "Near Mint",
     language: "EN",
@@ -69,6 +71,7 @@ export const catalogCards: PokemonCard[] = [
     setCode: "EVS",
     number: "215/203",
     rarity: "Secret Rare",
+    era: "Sword & Shield",
     image: "https://images.pokemontcg.io/swsh7/215_hires.png",
     condition: "Mint",
     language: "EN",
@@ -89,6 +92,7 @@ export const catalogCards: PokemonCard[] = [
     setCode: "BS",
     number: "58/102",
     rarity: "Common",
+    era: "Classic (Base-Neo)",
     image: "https://images.pokemontcg.io/base1/58_hires.png",
     condition: "Excellent",
     language: "JP",
@@ -109,6 +113,7 @@ export const catalogCards: PokemonCard[] = [
     setCode: "BRS",
     number: "SV107/SV122",
     rarity: "Secret Rare",
+    era: "Sword & Shield",
     image: "https://images.pokemontcg.io/swsh9/136_hires.png",
     condition: "Mint",
     language: "EN",
@@ -129,6 +134,7 @@ export const catalogCards: PokemonCard[] = [
     setCode: "N3",
     number: "20/64",
     rarity: "Holo Rare",
+    era: "Classic (Base-Neo)",
     image: "https://images.pokemontcg.io/neo3/20_hires.png",
     condition: "Near Mint",
     language: "EN",
@@ -149,6 +155,7 @@ export const catalogCards: PokemonCard[] = [
     setCode: "SLG",
     number: "1/73",
     rarity: "Ultra Rare",
+    era: "Sun & Moon",
     image: "https://images.pokemontcg.io/sm35/39_hires.png",
     condition: "Near Mint",
     language: "ES",
@@ -169,6 +176,7 @@ export const catalogCards: PokemonCard[] = [
     setCode: "S8b",
     number: "272/184",
     rarity: "Character Super Rare",
+    era: "Sword & Shield",
     image: "https://images.pokemontcg.io/swsh7/218_hires.png",
     condition: "Mint",
     language: "JP",
@@ -189,6 +197,7 @@ export const catalogCards: PokemonCard[] = [
     setCode: "S12a",
     number: "210/172",
     rarity: "Art Rare",
+    era: "Sword & Shield",
     image: "https://images.pokemontcg.io/swsh11/131_hires.png",
     condition: "Mint",
     language: "JP",
@@ -209,6 +218,7 @@ export const catalogCards: PokemonCard[] = [
     setCode: "S8bK",
     number: "269/184",
     rarity: "Character Super Rare",
+    era: "Sword & Shield",
     image: "https://images.pokemontcg.io/swsh8/114_hires.png",
     condition: "Near Mint",
     language: "KR",
@@ -229,6 +239,7 @@ export const catalogCards: PokemonCard[] = [
     setCode: "CS5C",
     number: "079/073",
     rarity: "Special Art Rare",
+    era: "Scarlet & Violet",
     image: "https://images.pokemontcg.io/sv3pt5/215_hires.png",
     condition: "Mint",
     language: "ZH-S",

@@ -4,6 +4,8 @@ import { X, TrendingUp, TrendingDown, Plus, Globe } from "lucide-react";
 import type { PokemonCard } from "../data/mockData";
 import { regions, languagesByRegion, getFlagForLanguage } from "../data/mockData";
 import { PriceSourcePanel } from "./PriceSourcePanel";
+import { PriceHistoryChart } from "./PriceHistoryChart";
+import { useAppStore } from "../store/useAppStore";
 
 interface CardDetailProps {
   card: PokemonCard;
@@ -16,6 +18,8 @@ export function CardDetail({ card, onClose, onAddToCollection }: CardDetailProps
   const [selectedLang, setSelectedLang] = useState(card.language);
   const imgRef = useRef<HTMLDivElement>(null);
   const [rotation, setRotation] = useState({ x: 0, y: 0 });
+  const { preferences } = useAppStore();
+  const sym = preferences.currencySymbol;
 
   const regionInfo = regions.find(r => r.id === card.region);
   const availableLanguages = languagesByRegion[card.region];
@@ -109,7 +113,7 @@ export function CardDetail({ card, onClose, onAddToCollection }: CardDetailProps
                   exit={{ scale: 0.9, opacity: 0 }}
                   className="text-4xl font-bold text-neon-gold text-glow-gold"
                 >
-                  €{formatNum(currentPrice)}
+                  {sym}{formatNum(currentPrice)}
                 </motion.p>
               </AnimatePresence>
               <div className={`flex items-center gap-1 mt-1 text-sm font-medium ${card.priceChange >= 0 ? "text-price-up" : "text-price-down"}`}>
@@ -118,7 +122,7 @@ export function CardDetail({ card, onClose, onAddToCollection }: CardDetailProps
               </div>
             </div>
 
-            {/* Language selector (Western cards have multiple languages) */}
+            {/* Language selector */}
             {availableLanguages.length > 1 && (
               <div>
                 <div className="flex items-center gap-1.5 mb-2">
@@ -133,7 +137,6 @@ export function CardDetail({ card, onClose, onAddToCollection }: CardDetailProps
                       key={lang.code}
                       onClick={() => {
                         setSelectedLang(lang.code);
-                        // Simulate price variation by language (±5% for non-English)
                         const langMultiplier = lang.code === "EN" ? 1 : lang.code === "JP" ? 1.15 : 0.85 + Math.random() * 0.15;
                         setCurrentPrice(Math.round(card.estimatedPrice * langMultiplier));
                       }}
@@ -169,6 +172,11 @@ export function CardDetail({ card, onClose, onAddToCollection }: CardDetailProps
                   <p className="text-xs font-semibold text-foreground mt-0.5">{item.value}</p>
                 </div>
               ))}
+            </div>
+
+            {/* Price history chart */}
+            <div className="bg-accent/20 rounded-xl p-4 border border-border/50">
+              <PriceHistoryChart basePrice={currentPrice} priceChange={card.priceChange} />
             </div>
 
             {/* Price sources */}

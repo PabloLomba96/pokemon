@@ -98,23 +98,30 @@ export function AppSidebar({ activeView, onNavigate, onLogout }: AppSidebarProps
               >Comunidad & Tienda</motion.p>
             )}
           </AnimatePresence>
-          {comingSoon.map((item) => (
-            <div key={item.id} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground/40 cursor-not-allowed">
-              <item.icon className="w-5 h-5 shrink-0" />
-              <AnimatePresence>
-                {!collapsed && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                    className="flex items-center gap-2 whitespace-nowrap"
-                  >
-                    <span className="text-sm">{item.label}</span>
-                    <span className="flex items-center gap-1 text-[10px] bg-accent/50 px-1.5 py-0.5 rounded-full">
-                      <Lock className="w-2.5 h-2.5" />Pronto
-                    </span>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          ))}
+          {comingSoon.map((item) => {
+            const isActive = activeView === item.id;
+            return (
+              <button key={item.id} onClick={() => onNavigate(item.id)}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 cursor-pointer ${
+                  isActive ? "bg-primary/15 text-primary" : "text-muted-foreground/60 hover:bg-accent hover:text-muted-foreground"
+                }`}
+              >
+                <item.icon className="w-5 h-5 shrink-0" />
+                <AnimatePresence>
+                  {!collapsed && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                      className="flex items-center gap-2 whitespace-nowrap"
+                    >
+                      <span className="text-sm">{item.label}</span>
+                      <span className="flex items-center gap-1 text-[10px] bg-accent/50 px-1.5 py-0.5 rounded-full">
+                        <Lock className="w-2.5 h-2.5" />Pronto
+                      </span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </button>
+            );
+          })}
         </div>
       </nav>
 
