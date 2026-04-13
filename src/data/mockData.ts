@@ -9,6 +9,11 @@ export interface PriceDetail {
   source: string;
 }
 
+export interface GradingInfo {
+  company: "PSA" | "BGS" | "CGC" | "PCA";
+  grade: number;
+}
+
 export interface PokemonCard {
   id: string;
   name: string;
@@ -22,6 +27,7 @@ export interface PokemonCard {
   language: string;
   region: CardRegion;
   finish: string;
+  grading?: GradingInfo;
   prices: {
     tcgApi: number;
     cardmarket: number;
@@ -32,6 +38,9 @@ export interface PokemonCard {
   priceChange: number;
   dateAdded: string;
 }
+
+export const gradingCompanies = ["PSA", "BGS", "CGC", "PCA"] as const;
+export const gradingGrades = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10] as const;
 
 export const regions: { id: CardRegion; label: string; flag: string; description: string }[] = [
   { id: "western", label: "Occidental", flag: "🌍", description: "EN, ES, FR, DE, IT — Numeración y trasera occidental" },
@@ -55,6 +64,7 @@ export const catalogCards: PokemonCard[] = [
     language: "EN",
     region: "western",
     finish: "Holo",
+    grading: { company: "PSA", grade: 9 },
     prices: { tcgApi: 42000, cardmarket: 38500, ebay: 45000 },
     priceDetails: [
       { trendPrice: 40250, lowPrice: 35000, avg1Day: 41000, avg7Day: 40500, avg30Day: 39800, source: "Cardmarket" },
@@ -77,6 +87,7 @@ export const catalogCards: PokemonCard[] = [
     language: "EN",
     region: "western",
     finish: "Alternate Art",
+    grading: { company: "BGS", grade: 9.5 },
     prices: { tcgApi: 28000, cardmarket: 25000, ebay: 31000 },
     priceDetails: [
       { trendPrice: 26500, lowPrice: 22000, avg1Day: 27000, avg7Day: 26000, avg30Day: 25500, source: "Cardmarket" },
@@ -182,6 +193,7 @@ export const catalogCards: PokemonCard[] = [
     language: "JP",
     region: "japanese",
     finish: "Alternate Art",
+    grading: { company: "PCA", grade: 10 },
     prices: { tcgApi: 15000, cardmarket: 13500, ebay: 16800 },
     priceDetails: [
       { trendPrice: 14500, lowPrice: 11000, avg1Day: 15200, avg7Day: 14800, avg30Day: 14000, source: "Cardmarket" },
