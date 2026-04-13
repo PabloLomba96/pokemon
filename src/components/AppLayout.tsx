@@ -182,8 +182,8 @@ export function AppLayout() {
                   <SearchBar onSelectCard={setSelectedCard} />
                 </div>
               </header>
-              <div className="p-6">
-                <CardGrid cards={catalogCards} onSelectCard={setSelectedCard} />
+              <div className="p-6 text-center py-16">
+                <p className="text-muted-foreground">Usa el buscador arriba para encontrar cartas en la API oficial.</p>
               </div>
             </motion.div>
           )}
