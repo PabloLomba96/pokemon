@@ -116,7 +116,16 @@ export const useAppStore = create<AppState>()(
         if (!userId) return;
 
         try {
-          const dbUpdates: Record<string, unknown> = {};
+          const dbUpdates: {
+            condition?: string;
+            finish?: string;
+            specific_language?: string | null;
+            manual_price?: number | null;
+            is_graded?: boolean;
+            grading_company?: string | null;
+            grade?: number | null;
+            language?: string;
+          } = {};
           if (updates.condition !== undefined) dbUpdates.condition = updates.condition;
           if (updates.finish !== undefined) dbUpdates.finish = updates.finish;
           if (updates.specificLanguage !== undefined) dbUpdates.specific_language = updates.specificLanguage;
