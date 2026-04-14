@@ -66,9 +66,11 @@ export type Database = {
           id: string
           is_graded: boolean
           language: string
+          manual_price: number | null
           price_change: number
           purchase_price: number | null
           region: string
+          specific_language: string | null
           user_id: string
         }
         Insert: {
@@ -89,9 +91,11 @@ export type Database = {
           id?: string
           is_graded?: boolean
           language?: string
+          manual_price?: number | null
           price_change?: number
           purchase_price?: number | null
           region?: string
+          specific_language?: string | null
           user_id: string
         }
         Update: {
@@ -112,9 +116,11 @@ export type Database = {
           id?: string
           is_graded?: boolean
           language?: string
+          manual_price?: number | null
           price_change?: number
           purchase_price?: number | null
           region?: string
+          specific_language?: string | null
           user_id?: string
         }
         Relationships: []
