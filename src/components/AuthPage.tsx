@@ -92,7 +92,7 @@ export function AuthPage({ onLogin, onGuest }: AuthPageProps) {
               <Sparkles className="w-10 h-10 text-primary" />
             </div>
             <h1 className="text-4xl font-bold text-foreground mb-3">
-              Poké<span className="text-primary text-glow-purple">Vault</span>
+              Dex<span className="text-primary text-glow-purple">Poke</span>
             </h1>
             <p className="text-muted-foreground max-w-sm mx-auto leading-relaxed">
               El centro de mandos definitivo para coleccionistas europeos de Trading Card Games
@@ -127,7 +127,7 @@ export function AuthPage({ onLogin, onGuest }: AuthPageProps) {
             <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
               <Sparkles className="w-5 h-5 text-primary" />
             </div>
-            <span className="text-xl font-bold text-foreground">PokéVault</span>
+            <span className="text-xl font-bold text-foreground">DexPoke</span>
           </div>
 
           <div className="mb-8">
