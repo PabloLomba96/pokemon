@@ -24,7 +24,6 @@ export function ProfilePage() {
   const [saved, setSaved] = useState(false);
 
   const totalValue = collection.reduce((sum, c) => sum + c.estimatedPrice, 0);
-  const formatNum = (n: number) => n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 
   // Load profile from DB
   useEffect(() => {
