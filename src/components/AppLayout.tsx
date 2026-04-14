@@ -7,6 +7,7 @@ import { CardGrid } from "./CardGrid";
 import { CollectionTableView } from "./CollectionTableView";
 import { CardDetail } from "./CardDetail";
 import { AddCardPanel } from "./AddCardPanel";
+import { EditCardModal } from "./EditCardModal";
 import { SearchBar } from "./SearchBar";
 import { GlobalSearch } from "./GlobalSearch";
 import { AuthPage } from "./AuthPage";
@@ -31,6 +32,7 @@ export function AppLayout() {
   const [collectionRegion, setCollectionRegion] = useState<CardRegion | "all">("all");
   const [showAddPanel, setShowAddPanel] = useState(false);
   const [addingCard, setAddingCard] = useState<PokemonCard | null>(null);
+  const [editingCard, setEditingCard] = useState<PokemonCard | null>(null);
   const [isGuest, setIsGuest] = useState(false);
   const [authReady, setAuthReady] = useState(false);
 
@@ -63,7 +65,6 @@ export function AppLayout() {
     }
   }, [isAuthenticated, userId]);
 
-  // Show auth page if not authenticated and not guest
   if (!authReady) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -90,9 +91,7 @@ export function AppLayout() {
     logout();
   };
 
-  // Guest guard: redirect to auth-required views
   const guardedViews = ["dashboard", "collection", "profile"];
-  const requiresAuth = guardedViews.includes(activeView) && isGuest;
 
   const handleNavigate = (view: string) => {
     if (guardedViews.includes(view) && isGuest) {
@@ -116,7 +115,7 @@ export function AppLayout() {
 
   const handleAddFromDetail = () => {
     if (isGuest) {
-      toast.error("Regístrate para añadir cartas a tu colección.", {
+      toast.error("Regístrate para guardar esta carta.", {
         action: {
           label: "Crear cuenta",
           onClick: () => { setIsGuest(false); setAuth(false, null); },
@@ -146,7 +145,7 @@ export function AppLayout() {
 
   const handleAddFromExplore = async (card: PokemonCard) => {
     if (isGuest) {
-      toast.error("Regístrate para añadir cartas a tu colección.", {
+      toast.error("Regístrate para guardar esta carta.", {
         action: {
           label: "Crear cuenta",
           onClick: () => { setIsGuest(false); setAuth(false, null); },
@@ -187,13 +186,13 @@ export function AppLayout() {
             </motion.div>
           )}
 
-          {activeView === "dashboard" && !requiresAuth && (
+          {activeView === "dashboard" && (
             <motion.div key="dashboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <Dashboard collection={collection} onNavigate={handleNavigate} />
             </motion.div>
           )}
 
-          {activeView === "collection" && !requiresAuth && (
+          {activeView === "collection" && (
             <motion.div key="collection" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">
                 <div className="flex items-center justify-between px-6 h-16">
@@ -242,11 +241,11 @@ export function AppLayout() {
                       <AnimatePresence mode="wait">
                         {collectionViewMode === "grid" ? (
                           <motion.div key="grid" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                            <CardGrid cards={filteredCollection} onSelectCard={setSelectedCard} />
+                            <CardGrid cards={filteredCollection} onSelectCard={setSelectedCard} onEditCard={setEditingCard} showEditButton />
                           </motion.div>
                         ) : (
                           <motion.div key="table" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                            <CollectionTableView cards={filteredCollection} onSelectCard={setSelectedCard} />
+                            <CollectionTableView cards={filteredCollection} onSelectCard={setSelectedCard} onEditCard={setEditingCard} />
                           </motion.div>
                         )}
                       </AnimatePresence>
@@ -274,7 +273,7 @@ export function AppLayout() {
             </motion.div>
           )}
 
-          {activeView === "profile" && !requiresAuth && (
+          {activeView === "profile" && (
             <motion.div key="profile" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">
                 <div className="flex items-center px-6 h-16">
@@ -308,7 +307,7 @@ export function AppLayout() {
 
       <AnimatePresence>
         {selectedCard && (
-          <CardDetail card={selectedCard} onClose={() => setSelectedCard(null)} onAddToCollection={handleAddFromDetail} />
+          <CardDetail card={selectedCard} onClose={() => setSelectedCard(null)} onAddToCollection={handleAddFromDetail} isGuest={isGuest} />
         )}
       </AnimatePresence>
 
@@ -318,6 +317,15 @@ export function AppLayout() {
             card={addingCard}
             onClose={() => setShowAddPanel(false)}
             onConfirmAdd={handleConfirmAdd}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {editingCard && (
+          <EditCardModal
+            card={editingCard}
+            onClose={() => { setEditingCard(null); loadCollection(); }}
           />
         )}
       </AnimatePresence>
