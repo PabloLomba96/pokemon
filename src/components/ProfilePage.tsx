@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { User, CreditCard, Gauge, Crown, Save, Check } from "lucide-react";
+import { formatPrice } from "../lib/utils";
 import { useAppStore } from "../store/useAppStore";
 import type { CurrencyCode, PriceEngine } from "../store/useAppStore";
 import { supabase } from "../integrations/supabase/client";
@@ -96,7 +97,7 @@ export function ProfilePage() {
             </div>
             <div className="text-right">
               <p className="text-xs text-muted-foreground uppercase tracking-wider">Valor Total</p>
-              <p className="text-lg font-bold text-neon-gold text-glow-gold">{preferences.currencySymbol}{formatNum(totalValue)}</p>
+              <p className="text-lg font-bold text-neon-gold text-glow-gold">{formatPrice(totalValue, preferences.currency)}</p>
               <p className="text-xs text-muted-foreground">{collection.length} cartas</p>
             </div>
           </div>
