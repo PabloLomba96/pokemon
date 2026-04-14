@@ -22,6 +22,7 @@ interface AppState {
   isCollectionLoading: boolean;
   addCard: (card: PokemonCard) => Promise<void>;
   removeCard: (cardId: string) => Promise<void>;
+  updateCard: (cardId: string, updates: Partial<PokemonCard>) => Promise<void>;
   loadCollection: () => Promise<void>;
 
   // Auth
@@ -72,11 +73,11 @@ export const useAppStore = create<AppState>()(
             grade: card.grading?.grade ?? null,
             estimated_price: card.estimatedPrice,
             price_change: card.priceChange,
+            manual_price: card.manualPrice ?? null,
+            specific_language: card.specificLanguage ?? null,
           });
 
           if (error) throw error;
-
-          // Reload collection from DB to stay in sync
           await get().loadCollection();
         } catch (err) {
           console.error("Error adding card:", err);
@@ -110,6 +111,43 @@ export const useAppStore = create<AppState>()(
         }
       },
 
+      updateCard: async (cardId, updates) => {
+        const { userId } = get();
+        if (!userId) return;
+
+        try {
+          const dbUpdates: Record<string, unknown> = {};
+          if (updates.condition !== undefined) dbUpdates.condition = updates.condition;
+          if (updates.finish !== undefined) dbUpdates.finish = updates.finish;
+          if (updates.specificLanguage !== undefined) dbUpdates.specific_language = updates.specificLanguage;
+          if (updates.manualPrice !== undefined) dbUpdates.manual_price = updates.manualPrice;
+          if (updates.grading !== undefined) {
+            dbUpdates.is_graded = !!updates.grading;
+            dbUpdates.grading_company = updates.grading?.company ?? null;
+            dbUpdates.grade = updates.grading?.grade ?? null;
+          }
+          if (updates.language !== undefined) dbUpdates.language = updates.language;
+
+          const { error } = await supabase
+            .from("user_cards")
+            .update(dbUpdates)
+            .eq("id", cardId)
+            .eq("user_id", userId);
+
+          if (error) throw error;
+
+          set((state) => ({
+            collection: state.collection.map((c) =>
+              c.id === cardId ? { ...c, ...updates } : c
+            ),
+          }));
+          toast.success("Carta actualizada");
+        } catch (err) {
+          console.error("Error updating card:", err);
+          toast.error("Error al actualizar la carta.");
+        }
+      },
+
       loadCollection: async () => {
         const { userId } = get();
         if (!userId) {
@@ -127,9 +165,8 @@ export const useAppStore = create<AppState>()(
 
           if (error) throw error;
 
-          // Map DB rows to PokemonCard format
           const cards: PokemonCard[] = (data ?? []).map((row: DbUserCard) => ({
-            id: row.id, // Use the DB UUID as card id
+            id: row.id,
             name: row.card_name,
             set: row.card_set,
             setCode: row.api_card_id.split("-")[0] ?? "",
@@ -141,6 +178,8 @@ export const useAppStore = create<AppState>()(
             language: row.language,
             region: row.region as PokemonCard["region"],
             finish: row.finish,
+            specificLanguage: row.specific_language,
+            manualPrice: row.manual_price,
             grading: row.is_graded && row.grading_company ? {
               company: row.grading_company as "PSA" | "BGS" | "CGC" | "PCA",
               grade: row.grade ?? 10,
@@ -151,7 +190,7 @@ export const useAppStore = create<AppState>()(
               ebay: null,
             },
             priceDetails: [],
-            estimatedPrice: row.estimated_price,
+            estimatedPrice: row.manual_price ?? row.estimated_price,
             priceChange: Number(row.price_change) || 0,
             dateAdded: row.acquired_at?.split("T")[0] ?? new Date().toISOString().split("T")[0],
           }));
@@ -180,7 +219,7 @@ export const useAppStore = create<AppState>()(
         currencySymbol: "€",
         priceEngine: "cardmarket",
         displayName: "Coleccionista",
-        email: "demo@pokevault.com",
+        email: "",
       },
       setCurrency: (currency) =>
         set((state) => ({
@@ -200,9 +239,8 @@ export const useAppStore = create<AppState>()(
         })),
     }),
     {
-      name: "pokevault-store",
+      name: "dexpoke-store",
       partialize: (state) => ({
-        // Only persist preferences, not collection (that's in DB now)
         preferences: state.preferences,
       }),
     }
