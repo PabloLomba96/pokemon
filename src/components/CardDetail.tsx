@@ -1,24 +1,25 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, TrendingUp, TrendingDown, Plus, Globe } from "lucide-react";
+import { X, TrendingUp, TrendingDown, Plus, UserPlus } from "lucide-react";
 import type { PokemonCard } from "../types/cards";
 import { regions, getFlagForLanguage } from "../constants/cards";
 import { PriceSourcePanel } from "./PriceSourcePanel";
 import { PriceHistoryChart } from "./PriceHistoryChart";
 import { useAppStore } from "../store/useAppStore";
+import { formatPrice } from "../lib/utils";
 
 interface CardDetailProps {
   card: PokemonCard;
   onClose: () => void;
   onAddToCollection?: () => void;
+  isGuest?: boolean;
 }
 
-export function CardDetail({ card, onClose, onAddToCollection }: CardDetailProps) {
+export function CardDetail({ card, onClose, onAddToCollection, isGuest }: CardDetailProps) {
   const [currentPrice, setCurrentPrice] = useState(card.estimatedPrice);
   const imgRef = useRef<HTMLDivElement>(null);
   const [rotation, setRotation] = useState({ x: 0, y: 0 });
   const { preferences } = useAppStore();
-  const sym = preferences.currencySymbol;
 
   const regionInfo = regions.find(r => r.id === card.region);
 
@@ -31,11 +32,6 @@ export function CardDetail({ card, onClose, onAddToCollection }: CardDetailProps
   };
 
   const handleMouseLeave = () => setRotation({ x: 0, y: 0 });
-
-  const formatPrice = (cents: number) => {
-    const val = (cents / 100).toFixed(2);
-    return `${sym}${val}`;
-  };
 
   return (
     <motion.div
@@ -55,7 +51,7 @@ export function CardDetail({ card, onClose, onAddToCollection }: CardDetailProps
         <div className="flex justify-between items-start mb-6">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-lg">{getFlagForLanguage(card.language)}</span>
+              <span className="text-lg">{getFlagForLanguage(card.specificLanguage ?? card.language)}</span>
               <h2 className="text-2xl font-bold text-foreground">{card.name}</h2>
               <span className="text-sm px-2 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20 font-medium">
                 {regionInfo?.flag} {regionInfo?.label}
@@ -110,7 +106,7 @@ export function CardDetail({ card, onClose, onAddToCollection }: CardDetailProps
                   exit={{ scale: 0.9, opacity: 0 }}
                   className="text-4xl font-bold text-neon-gold text-glow-gold"
                 >
-                  {currentPrice > 0 ? formatPrice(currentPrice) : "No disponible"}
+                  {currentPrice > 0 ? formatPrice(currentPrice, preferences.currency) : "No disponible"}
                 </motion.p>
               </AnimatePresence>
               {card.priceChange !== 0 && (
@@ -156,8 +152,11 @@ export function CardDetail({ card, onClose, onAddToCollection }: CardDetailProps
               onClick={onAddToCollection}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors glow-purple cursor-pointer active:scale-95"
             >
-              <Plus className="w-5 h-5" />
-              Añadir a Colección
+              {isGuest ? (
+                <><UserPlus className="w-5 h-5" /> Regístrate para guardar esta carta</>
+              ) : (
+                <><Plus className="w-5 h-5" /> Añadir a Colección</>
+              )}
             </button>
           </div>
         </div>

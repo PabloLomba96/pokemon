@@ -1,28 +1,31 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { X, Check } from "lucide-react";
+import { X, Check, Save } from "lucide-react";
 import { conditions, gradingCompanies, gradingGrades, languagesByRegion } from "../constants/cards";
 import type { PokemonCard, GradingInfo } from "../types/cards";
 import { Switch } from "./ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Input } from "./ui/input";
+import { useAppStore } from "../store/useAppStore";
 
-interface AddCardPanelProps {
+interface EditCardModalProps {
   card: PokemonCard;
   onClose: () => void;
-  onConfirmAdd: (card: PokemonCard) => void;
 }
 
-export function AddCardPanel({ card, onClose, onConfirmAdd }: AddCardPanelProps) {
-  const [condition, setCondition] = useState("Near Mint");
-  const [finish, setFinish] = useState(card.finish || "Normal");
-  const [saved, setSaved] = useState(false);
+export function EditCardModal({ card, onClose }: EditCardModalProps) {
+  const { updateCard } = useAppStore();
+  const [condition, setCondition] = useState(card.condition);
+  const [finish, setFinish] = useState(card.finish);
+  const [isGraded, setIsGraded] = useState(!!card.grading);
+  const [gradingCompany, setGradingCompany] = useState<GradingInfo["company"]>(card.grading?.company ?? "PSA");
+  const [gradingGrade, setGradingGrade] = useState<number>(card.grading?.grade ?? 10);
+  const [specificLanguage, setSpecificLanguage] = useState(card.specificLanguage ?? card.language);
+  const [manualPriceInput, setManualPriceInput] = useState(
+    card.manualPrice ? (card.manualPrice / 100).toFixed(2).replace(".", ",") : ""
+  );
   const [saving, setSaving] = useState(false);
-  const [isGraded, setIsGraded] = useState(false);
-  const [gradingCompany, setGradingCompany] = useState<GradingInfo["company"]>("PSA");
-  const [gradingGrade, setGradingGrade] = useState<number>(10);
-  const [specificLanguage, setSpecificLanguage] = useState(card.language);
-  const [manualPriceInput, setManualPriceInput] = useState("");
+  const [saved, setSaved] = useState(false);
 
   const availableFinishes = getFinishesFromRarity(card.rarity);
   const availableLanguages = languagesByRegion[card.region] ?? [];
@@ -33,21 +36,16 @@ export function AddCardPanel({ card, onClose, onConfirmAdd }: AddCardPanelProps)
       ? Math.round(parseFloat(manualPriceInput.replace(",", ".")) * 100)
       : null;
 
-    const cardToAdd: PokemonCard = {
-      ...card,
+    await updateCard(card.id, {
       condition,
       finish,
       specificLanguage,
       manualPrice: manualCents,
       grading: isGraded ? { company: gradingCompany, grade: gradingGrade } : undefined,
-    };
-    try {
-      await onConfirmAdd(cardToAdd);
-      setSaved(true);
-      setTimeout(onClose, 1200);
-    } catch {
-      setSaving(false);
-    }
+    });
+
+    setSaved(true);
+    setTimeout(onClose, 800);
   };
 
   return (
@@ -68,7 +66,7 @@ export function AddCardPanel({ card, onClose, onConfirmAdd }: AddCardPanelProps)
       >
         <div className="p-6 space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold text-foreground">Añadir Carta</h3>
+            <h3 className="text-lg font-bold text-foreground">Editar Carta</h3>
             <button onClick={onClose} className="text-muted-foreground hover:text-foreground cursor-pointer active:scale-95 transition-transform">
               <X className="w-5 h-5" />
             </button>
@@ -99,7 +97,7 @@ export function AddCardPanel({ card, onClose, onConfirmAdd }: AddCardPanelProps)
             </div>
           </div>
 
-          {/* Finish — derived from rarity */}
+          {/* Finish */}
           <div>
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-2">Acabado</label>
             {availableFinishes.length <= 1 ? (
@@ -121,7 +119,7 @@ export function AddCardPanel({ card, onClose, onConfirmAdd }: AddCardPanelProps)
             )}
           </div>
 
-          {/* Language selector — dynamic by region */}
+          {/* Language */}
           {availableLanguages.length > 1 && (
             <div>
               <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-2">Idioma Específico</label>
@@ -156,7 +154,7 @@ export function AddCardPanel({ card, onClose, onConfirmAdd }: AddCardPanelProps)
               />
               <span className="text-sm text-muted-foreground">€</span>
             </div>
-            <p className="text-[10px] text-muted-foreground mt-1">Opcional. Si se introduce, se usará como valor del portafolio.</p>
+            <p className="text-[10px] text-muted-foreground mt-1">Si se introduce, se usará como valor del portafolio en lugar del precio de mercado.</p>
           </div>
 
           {/* Grading */}
@@ -166,7 +164,7 @@ export function AddCardPanel({ card, onClose, onConfirmAdd }: AddCardPanelProps)
               <Switch checked={isGraded} onCheckedChange={setIsGraded} />
             </div>
             {isGraded && (
-              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="space-y-3 overflow-hidden">
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="space-y-3 overflow-hidden">
                 <div>
                   <label className="text-xs text-muted-foreground block mb-1.5">Empresa</label>
                   <Select value={gradingCompany} onValueChange={(v) => setGradingCompany(v as GradingInfo["company"])}>
@@ -200,11 +198,11 @@ export function AddCardPanel({ card, onClose, onConfirmAdd }: AddCardPanelProps)
             } disabled:opacity-60`}
           >
             {saved ? (
-              <><Check className="w-5 h-5" /> ¡Añadida!</>
+              <><Check className="w-5 h-5" /> ¡Guardado!</>
             ) : saving ? (
               <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
             ) : (
-              "Confirmar y Añadir"
+              <><Save className="w-5 h-5" /> Guardar Cambios</>
             )}
           </button>
         </div>

@@ -32,14 +32,14 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "PokeHit - Tu Colección Pokémon" },
-      { name: "description", content: "Dashboard premium para coleccionistas de Pokémon TCG" },
-      { property: "og:title", content: "PokeHit - Tu Colección Pokémon" },
-      { property: "og:description", content: "Dashboard premium para coleccionistas de Pokémon TCG" },
+      { title: "DexPoke — Tu Colección TCG" },
+      { name: "description", content: "Plataforma profesional para coleccionistas de Pokémon TCG con precios en tiempo real" },
+      { property: "og:title", content: "DexPoke — Tu Colección TCG" },
+      { property: "og:description", content: "Plataforma profesional para coleccionistas de Pokémon TCG con precios en tiempo real" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:title", content: "PokeHit - Tu Colección Pokémon" },
-      { name: "twitter:description", content: "Dashboard premium para coleccionistas de Pokémon TCG" },
+      { name: "twitter:title", content: "DexPoke — Tu Colección TCG" },
+      { name: "twitter:description", content: "Plataforma profesional para coleccionistas de Pokémon TCG con precios en tiempo real" },
     ],
     links: [
       {

@@ -59,7 +59,7 @@ export function AppSidebar({ activeView, onNavigate, onLogout }: AppSidebarProps
           {!collapsed && (
             <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="font-bold text-lg text-foreground whitespace-nowrap"
-            >PokéVault</motion.span>
+            >DexPoke</motion.span>
           )}
         </AnimatePresence>
       </div>

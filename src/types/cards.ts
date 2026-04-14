@@ -28,6 +28,8 @@ export interface PokemonCard {
   region: CardRegion;
   finish: string;
   grading?: GradingInfo;
+  specificLanguage?: string | null;
+  manualPrice?: number | null;
   prices: {
     tcgApi: number | null;
     cardmarket: number | null;
@@ -72,4 +74,6 @@ export interface DbUserCard {
   price_change: number;
   acquired_at: string;
   created_at: string;
+  manual_price: number | null;
+  specific_language: string | null;
 }

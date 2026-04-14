@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { User, CreditCard, Gauge, Crown, Save, Check } from "lucide-react";
+import { formatPrice } from "../lib/utils";
 import { useAppStore } from "../store/useAppStore";
 import type { CurrencyCode, PriceEngine } from "../store/useAppStore";
 import { supabase } from "../integrations/supabase/client";
@@ -24,7 +25,6 @@ export function ProfilePage() {
   const [saved, setSaved] = useState(false);
 
   const totalValue = collection.reduce((sum, c) => sum + c.estimatedPrice, 0);
-  const formatNum = (n: number) => n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 
   // Load profile from DB
   useEffect(() => {
@@ -75,7 +75,7 @@ export function ProfilePage() {
     <div className="p-6 max-w-4xl mx-auto space-y-8">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
         <h1 className="text-2xl font-bold text-foreground mb-1">Mi Perfil</h1>
-        <p className="text-sm text-muted-foreground">Configura tu experiencia en PokéVault</p>
+        <p className="text-sm text-muted-foreground">Configura tu experiencia en DexPoke</p>
       </motion.div>
 
       <div className="grid md:grid-cols-2 gap-6">
@@ -97,7 +97,7 @@ export function ProfilePage() {
             </div>
             <div className="text-right">
               <p className="text-xs text-muted-foreground uppercase tracking-wider">Valor Total</p>
-              <p className="text-lg font-bold text-neon-gold text-glow-gold">{preferences.currencySymbol}{formatNum(totalValue)}</p>
+              <p className="text-lg font-bold text-neon-gold text-glow-gold">{formatPrice(totalValue, preferences.currency)}</p>
               <p className="text-xs text-muted-foreground">{collection.length} cartas</p>
             </div>
           </div>

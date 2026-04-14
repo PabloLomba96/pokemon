@@ -14,6 +14,7 @@ import { EmptyState } from "./EmptyState";
 import { useDashboardWidgets } from "../hooks/useDashboardWidgets";
 import type { WidgetType } from "../hooks/useDashboardWidgets";
 import { useAppStore } from "../store/useAppStore";
+import { formatPrice } from "../lib/utils";
 
 interface DashboardProps {
   collection: PokemonCard[];
@@ -25,9 +26,7 @@ export function Dashboard({ collection, onNavigate }: DashboardProps) {
   const [showCustomize, setShowCustomize] = useState(false);
   const { widgets, toggleWidget, moveWidget } = useDashboardWidgets();
   const { preferences } = useAppStore();
-  const sym = preferences.currencySymbol;
 
-  const formatNumber = (n: number) => n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
   const totalValue = collection.reduce((sum, c) => sum + c.estimatedPrice, 0);
   const topCard = collection.length > 0
     ? collection.reduce((top, c) => (c.estimatedPrice > top.estimatedPrice ? c : top), collection[0])
@@ -53,7 +52,7 @@ export function Dashboard({ collection, onNavigate }: DashboardProps) {
       case "metrics":
         return (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <MetricCard title="Valor Total" value={`${sym}${formatNumber(totalValue)}`} change={5.8} icon={Wallet} accentClass="text-neon-gold" glowClass="glow-gold" />
+            <MetricCard title="Valor Total" value={formatPrice(totalValue, preferences.currency)} change={5.8} icon={Wallet} accentClass="text-neon-gold" glowClass="glow-gold" />
             <MetricCard title="Cartas Totales" value={collection.length.toString()} icon={Layers} accentClass="text-neon-emerald" glowClass="glow-emerald" />
             <MetricCard title="Top Carta" value={topCard?.name ?? "—"} change={topCard?.priceChange} icon={Crown} accentClass="text-primary" glowClass="glow-purple" />
           </div>
@@ -100,7 +99,7 @@ export function Dashboard({ collection, onNavigate }: DashboardProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-foreground">Mi Dashboard</h1>
+          <h1 className="text-xl font-bold text-foreground">Bienvenido a tu Bóveda en DexPoke</h1>
           <p className="text-sm text-muted-foreground">{collection.length} cartas en tu colección</p>
         </div>
         <button onClick={() => setShowCustomize(!showCustomize)}
