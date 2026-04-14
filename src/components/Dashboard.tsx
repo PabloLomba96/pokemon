@@ -100,7 +100,7 @@ export function Dashboard({ collection, onNavigate }: DashboardProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-foreground">Mi Dashboard</h1>
+          <h1 className="text-xl font-bold text-foreground">Bienvenido a tu Bóveda en DexPoke</h1>
           <p className="text-sm text-muted-foreground">{collection.length} cartas en tu colección</p>
         </div>
         <button onClick={() => setShowCustomize(!showCustomize)}

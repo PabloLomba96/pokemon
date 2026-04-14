@@ -75,7 +75,7 @@ export function ProfilePage() {
     <div className="p-6 max-w-4xl mx-auto space-y-8">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
         <h1 className="text-2xl font-bold text-foreground mb-1">Mi Perfil</h1>
-        <p className="text-sm text-muted-foreground">Configura tu experiencia en PokéVault</p>
+        <p className="text-sm text-muted-foreground">Configura tu experiencia en DexPoke</p>
       </motion.div>
 
       <div className="grid md:grid-cols-2 gap-6">
