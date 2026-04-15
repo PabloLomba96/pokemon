@@ -7,10 +7,13 @@ interface ApiCard {
   name: string;
   number: string;
   rarity?: string;
+  subtypes?: string[];
   set: {
     id: string;
     name: string;
     series: string;
+    printedTotal?: number;
+    total?: number;
   };
   images: {
     small: string;
@@ -56,16 +59,9 @@ function mapEra(series: string): string {
   return eraMap[series] ?? series;
 }
 
-// Japanese sets use specific prefixes in the API
-const JAPANESE_SET_PREFIXES = [
-  "sv", "s", "sm", "xy", "bw", "dp", "pcg", "web", "vs",
-  // but exclude western sv sets
-];
-
 function detectRegion(card: ApiCard): CardRegion {
   const setId = card.set.id.toLowerCase();
-  // Japanese sets typically have specific IDs
-  if (setId.startsWith("sv") && setId.match(/^sv\d/)) return "western"; // sv1, sv2, etc are western
+  if (setId.startsWith("sv") && setId.match(/^sv\d/)) return "western";
   if (setId.match(/^s\d/) || setId.match(/^sm\d/) || setId.match(/^xy\d/)) return "japanese";
   return "western";
 }
@@ -92,7 +88,6 @@ function mapApiCard(api: ApiCard): PokemonCard {
     }
   }
 
-  // Use first available real price as estimated
   const estimatedPrice = trendCents ?? tcgPrice ?? 0;
 
   return {
@@ -111,7 +106,7 @@ function mapApiCard(api: ApiCard): PokemonCard {
     prices: {
       tcgApi: tcgPrice,
       cardmarket: trendCents,
-      ebay: null, // No eBay data from this API
+      ebay: null,
     },
     priceDetails: cmPrices ? [{
       trendPrice: trendCents ?? 0,
@@ -122,7 +117,7 @@ function mapApiCard(api: ApiCard): PokemonCard {
       source: "Cardmarket",
     }] : [],
     estimatedPrice,
-    priceChange: 0, // No real historical data from this API
+    priceChange: 0,
     dateAdded: new Date().toISOString().split("T")[0],
   };
 }
@@ -134,6 +129,9 @@ export interface SearchOptions {
   pageSize?: number;
 }
 
+/**
+ * Search cards by name or number. Supports queries like "Charizard", "151", "001/165".
+ */
 export async function searchCards(opts: SearchOptions): Promise<{
   cards: PokemonCard[];
   totalCount: number;
@@ -141,13 +139,17 @@ export async function searchCards(opts: SearchOptions): Promise<{
   const { query, region = "all", page = 1, pageSize = 20 } = opts;
   if (!query.trim()) return { cards: [], totalCount: 0 };
 
-  // Build query string with region filtering
-  let q = `name:"${query}*"`;
+  // Detect if query is a number or number/total pattern
+  const numberPattern = /^(\d{1,4})(\/\d{1,4})?$/;
+  const isNumberSearch = numberPattern.test(query.trim());
 
-  // The Pokémon TCG API doesn't have a direct language filter,
-  // but Japanese sets have specific set IDs we can filter on
-  // For now, we filter client-side after fetch to keep it simple
-  // and because the API's set categorization isn't 100% aligned with our regions
+  let q: string;
+  if (isNumberSearch) {
+    const num = query.trim().split("/")[0];
+    q = `number:"${num}"`;
+  } else {
+    q = `name:"${query}*"`;
+  }
 
   const url = `${BASE_URL}/cards?q=${encodeURIComponent(q)}&page=${page}&pageSize=${pageSize}&orderBy=name`;
 
@@ -160,7 +162,6 @@ export async function searchCards(opts: SearchOptions): Promise<{
   const data: ApiResponse = await res.json();
   let cards = data.data.map(mapApiCard);
 
-  // Client-side region filter
   if (region !== "all") {
     cards = cards.filter(c => c.region === region);
   }
@@ -184,7 +185,6 @@ export async function getCardById(id: string): Promise<PokemonCard | null> {
 export async function getCardsByIds(ids: string[]): Promise<Map<string, PokemonCard>> {
   if (ids.length === 0) return new Map();
 
-  // API supports OR queries: id:"base1-4" OR id:"swsh7-215"
   const idQuery = ids.map(id => `id:"${id}"`).join(" OR ");
   const url = `${BASE_URL}/cards?q=${encodeURIComponent(idQuery)}&pageSize=${Math.min(ids.length, 250)}`;
 
@@ -197,4 +197,18 @@ export async function getCardsByIds(ids: string[]): Promise<Map<string, PokemonC
     map.set(card.id, mapApiCard(card));
   }
   return map;
+}
+
+/**
+ * Get all cards in a set (for set tracker completion)
+ */
+export async function getSetCards(setId: string): Promise<{ cards: PokemonCard[]; totalCount: number }> {
+  const url = `${BASE_URL}/cards?q=${encodeURIComponent(`set.id:"${setId}"`)}&pageSize=250&orderBy=number`;
+  const res = await fetch(url);
+  if (!res.ok) return { cards: [], totalCount: 0 };
+  const data: ApiResponse = await res.json();
+  return {
+    cards: data.data.map(mapApiCard),
+    totalCount: data.totalCount,
+  };
 }

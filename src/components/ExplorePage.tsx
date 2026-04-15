@@ -10,6 +10,7 @@ import { AdvancedFilters } from "./AdvancedFilters";
 import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group";
 import { Skeleton } from "./ui/skeleton";
 import { usePokemonSearch } from "../hooks/usePokemonSearch";
+import { useAppStore } from "../store/useAppStore";
 import { toast } from "sonner";
 
 interface ExplorePageProps {
@@ -30,9 +31,13 @@ export function ExplorePage({ onAddToCollection }: ExplorePageProps) {
   const [selectedRarities, setSelectedRarities] = useState<string[]>([]);
 
   const advancedCount = selectedEras.length + selectedSets.length + selectedRarities.length;
+  const { collection } = useAppStore();
 
   const { results: apiResults, isLoading: apiLoading, error: apiError } = usePokemonSearch(searchQuery);
   const isSearching = searchQuery.trim().length >= 2;
+
+  // Collection api_card_ids for duplicate detection
+  const collectionApiIds = new Set(collection.map((c) => c.setCode + "-" + c.number));
 
   if (apiError) {
     toast.error(apiError);
@@ -48,6 +53,12 @@ export function ExplorePage({ onAddToCollection }: ExplorePageProps) {
       if (sortBy === "change") return b.priceChange - a.priceChange;
       return a.name.localeCompare(b.name);
     });
+
+  // Build collectionIds set from api card ids for duplicate indicator
+  const collectionIds = new Set(collection.map((c) => {
+    // Match by api_card_id format  
+    return c.setCode + "-" + c.number;
+  }));
 
   const handleAddToCollection = () => {
     if (selectedCard) {
@@ -78,7 +89,7 @@ export function ExplorePage({ onAddToCollection }: ExplorePageProps) {
               Descubre Cartas <span className="text-primary text-glow-purple">Pokémon TCG</span>
             </h1>
             <p className="text-muted-foreground max-w-lg mx-auto">
-              Busca en la base de datos oficial con precios reales de Cardmarket y TCGPlayer.
+              Busca por nombre o número en la base de datos oficial con precios reales.
             </p>
           </motion.div>
 
@@ -91,7 +102,7 @@ export function ExplorePage({ onAddToCollection }: ExplorePageProps) {
               <input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar por nombre de carta (ej: Charizard, Pikachu)..."
+                placeholder="Buscar por nombre o número (ej: Charizard, 151, 001/165)..."
                 className="flex-1 bg-transparent text-foreground placeholder:text-muted-foreground outline-none"
               />
               {apiLoading && (
@@ -212,7 +223,7 @@ export function ExplorePage({ onAddToCollection }: ExplorePageProps) {
           ) : (
             <>
               <p className="text-xs text-muted-foreground mb-4">{filtered.length} cartas encontradas</p>
-              <CardGrid cards={filtered} onSelectCard={setSelectedCard} />
+              <CardGrid cards={filtered} onSelectCard={setSelectedCard} collectionIds={collectionIds} />
               {filtered.length === 0 && (
                 <div className="text-center py-16">
                   <p className="text-muted-foreground">No se encontraron cartas en la API.</p>

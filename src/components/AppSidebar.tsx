@@ -16,6 +16,7 @@ import {
   LogOut,
   User,
   Settings,
+  BarChart3,
 } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 
@@ -23,6 +24,7 @@ const mainNav = [
   { icon: Compass, label: "Explorar", id: "explore" },
   { icon: LayoutDashboard, label: "Dashboard", id: "dashboard" },
   { icon: Library, label: "Colección", id: "collection" },
+  { icon: BarChart3, label: "Tracker de Sets", id: "set-tracker" },
   { icon: Search, label: "Buscador", id: "search" },
   { icon: Settings, label: "Perfil", id: "profile" },
 ];
@@ -59,7 +61,7 @@ export function AppSidebar({ activeView, onNavigate, onLogout }: AppSidebarProps
           {!collapsed && (
             <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="font-bold text-lg text-foreground whitespace-nowrap"
-            >DexPoke</motion.span>
+            >Dex<span className="text-primary">Vault</span></motion.span>
           )}
         </AnimatePresence>
       </div>

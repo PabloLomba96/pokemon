@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Wallet, Layers, Crown, Settings2, Eye, EyeOff, ChevronUp, ChevronDown, Package, Compass } from "lucide-react";
+import { Wallet, Layers, Crown, Settings2, Eye, EyeOff, ChevronUp, ChevronDown } from "lucide-react";
 import type { PokemonCard } from "../types/cards";
 import { MetricCard } from "./MetricCard";
 import { PortfolioChart } from "./PortfolioChart";
@@ -33,7 +33,6 @@ export function Dashboard({ collection, onNavigate }: DashboardProps) {
     : null;
   const recentCards = [...collection].sort((a, b) => b.dateAdded.localeCompare(a.dateAdded)).slice(0, 6);
 
-  // If collection is empty, show premium empty state
   if (collection.length === 0) {
     return (
       <div className="p-6">
@@ -96,10 +95,9 @@ export function Dashboard({ collection, onNavigate }: DashboardProps) {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-foreground">Bienvenido a tu Bóveda en DexPoke</h1>
+          <h1 className="text-xl font-bold text-foreground">Bienvenido a tu Bóveda en DexVault</h1>
           <p className="text-sm text-muted-foreground">{collection.length} cartas en tu colección</p>
         </div>
         <button onClick={() => setShowCustomize(!showCustomize)}
@@ -110,7 +108,6 @@ export function Dashboard({ collection, onNavigate }: DashboardProps) {
         </button>
       </div>
 
-      {/* Customize panel */}
       <AnimatePresence>
         {showCustomize && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
@@ -142,14 +139,12 @@ export function Dashboard({ collection, onNavigate }: DashboardProps) {
         )}
       </AnimatePresence>
 
-      {/* Widgets */}
       {widgets.filter(w => w.enabled).map((w) => (
         <motion.div key={w.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
           {renderWidget(w.type)}
         </motion.div>
       ))}
 
-      {/* Card detail */}
       <AnimatePresence>
         {selectedCard && (
           <CardDetail card={selectedCard} onClose={() => setSelectedCard(null)} />

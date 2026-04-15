@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { PokemonCard } from "../types/cards";
+import type { PokemonCard, Folder } from "../types/cards";
 import type { DbUserCard } from "../types/cards";
 import { supabase } from "../integrations/supabase/client";
 import { toast } from "sonner";
@@ -22,8 +22,17 @@ interface AppState {
   isCollectionLoading: boolean;
   addCard: (card: PokemonCard) => Promise<void>;
   removeCard: (cardId: string) => Promise<void>;
+  removeCards: (cardIds: string[]) => Promise<void>;
   updateCard: (cardId: string, updates: Partial<PokemonCard>) => Promise<void>;
+  toggleFavorite: (cardId: string) => Promise<void>;
+  moveCardsToFolder: (cardIds: string[], folderId: string | null) => Promise<void>;
   loadCollection: () => Promise<void>;
+
+  // Folders
+  folders: Folder[];
+  loadFolders: () => Promise<void>;
+  createFolder: (name: string, color?: string) => Promise<void>;
+  deleteFolder: (folderId: string) => Promise<void>;
 
   // Auth
   isAuthenticated: boolean;
@@ -92,7 +101,6 @@ export const useAppStore = create<AppState>()(
         const { userId } = get();
         if (!userId) return;
 
-        set({ isCollectionLoading: true });
         try {
           const { error } = await supabase
             .from("user_cards")
@@ -103,11 +111,80 @@ export const useAppStore = create<AppState>()(
           if (error) throw error;
           set((state) => ({
             collection: state.collection.filter((c) => c.id !== cardId),
-            isCollectionLoading: false,
           }));
-        } catch (err) {
-          set({ isCollectionLoading: false });
+          toast.success("Carta eliminada");
+        } catch {
           toast.error("Error al eliminar la carta.");
+        }
+      },
+
+      removeCards: async (cardIds) => {
+        const { userId } = get();
+        if (!userId || cardIds.length === 0) return;
+
+        try {
+          const { error } = await supabase
+            .from("user_cards")
+            .delete()
+            .in("id", cardIds)
+            .eq("user_id", userId);
+
+          if (error) throw error;
+          set((state) => ({
+            collection: state.collection.filter((c) => !cardIds.includes(c.id)),
+          }));
+          toast.success(`${cardIds.length} cartas eliminadas`);
+        } catch {
+          toast.error("Error al eliminar cartas.");
+        }
+      },
+
+      toggleFavorite: async (cardId) => {
+        const { userId, collection } = get();
+        if (!userId) return;
+
+        const card = collection.find((c) => c.id === cardId);
+        if (!card) return;
+
+        const newVal = !card.isFavorite;
+        try {
+          const { error } = await supabase
+            .from("user_cards")
+            .update({ is_favorite: newVal })
+            .eq("id", cardId)
+            .eq("user_id", userId);
+
+          if (error) throw error;
+          set((state) => ({
+            collection: state.collection.map((c) =>
+              c.id === cardId ? { ...c, isFavorite: newVal } : c
+            ),
+          }));
+        } catch {
+          toast.error("Error al actualizar favorito.");
+        }
+      },
+
+      moveCardsToFolder: async (cardIds, folderId) => {
+        const { userId } = get();
+        if (!userId) return;
+
+        try {
+          const { error } = await supabase
+            .from("user_cards")
+            .update({ folder_id: folderId })
+            .in("id", cardIds)
+            .eq("user_id", userId);
+
+          if (error) throw error;
+          set((state) => ({
+            collection: state.collection.map((c) =>
+              cardIds.includes(c.id) ? { ...c, folderId } : c
+            ),
+          }));
+          toast.success(`${cardIds.length} carta(s) movida(s)`);
+        } catch {
+          toast.error("Error al mover cartas.");
         }
       },
 
@@ -116,16 +193,7 @@ export const useAppStore = create<AppState>()(
         if (!userId) return;
 
         try {
-          const dbUpdates: {
-            condition?: string;
-            finish?: string;
-            specific_language?: string | null;
-            manual_price?: number | null;
-            is_graded?: boolean;
-            grading_company?: string | null;
-            grade?: number | null;
-            language?: string;
-          } = {};
+          const dbUpdates: Record<string, unknown> = {};
           if (updates.condition !== undefined) dbUpdates.condition = updates.condition;
           if (updates.finish !== undefined) dbUpdates.finish = updates.finish;
           if (updates.specificLanguage !== undefined) dbUpdates.specific_language = updates.specificLanguage;
@@ -189,6 +257,8 @@ export const useAppStore = create<AppState>()(
             finish: row.finish,
             specificLanguage: row.specific_language,
             manualPrice: row.manual_price,
+            isFavorite: row.is_favorite ?? false,
+            folderId: row.folder_id ?? null,
             grading: row.is_graded && row.grading_company ? {
               company: row.grading_company as "PSA" | "BGS" | "CGC" | "PCA",
               grade: row.grade ?? 10,
@@ -212,13 +282,75 @@ export const useAppStore = create<AppState>()(
         }
       },
 
+      // Folders
+      folders: [],
+
+      loadFolders: async () => {
+        const { userId } = get();
+        if (!userId) return;
+
+        try {
+          const { data, error } = await supabase
+            .from("folders")
+            .select("*")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: true });
+
+          if (error) throw error;
+          set({ folders: (data as Folder[]) ?? [] });
+        } catch {
+          console.error("Error loading folders");
+        }
+      },
+
+      createFolder: async (name, color = "#8B5CF6") => {
+        const { userId } = get();
+        if (!userId) return;
+
+        try {
+          const { error } = await supabase.from("folders").insert({
+            user_id: userId,
+            name,
+            color,
+          });
+          if (error) throw error;
+          await get().loadFolders();
+          toast.success(`Carpeta "${name}" creada`);
+        } catch {
+          toast.error("Error al crear carpeta.");
+        }
+      },
+
+      deleteFolder: async (folderId) => {
+        const { userId } = get();
+        if (!userId) return;
+
+        try {
+          const { error } = await supabase
+            .from("folders")
+            .delete()
+            .eq("id", folderId)
+            .eq("user_id", userId);
+          if (error) throw error;
+          set((state) => ({
+            folders: state.folders.filter((f) => f.id !== folderId),
+            collection: state.collection.map((c) =>
+              c.folderId === folderId ? { ...c, folderId: null } : c
+            ),
+          }));
+          toast.success("Carpeta eliminada");
+        } catch {
+          toast.error("Error al eliminar carpeta.");
+        }
+      },
+
       // Auth
       isAuthenticated: false,
       userId: null,
       login: () => set({ isAuthenticated: true }),
       logout: () => {
         supabase.auth.signOut();
-        set({ isAuthenticated: false, userId: null, collection: [] });
+        set({ isAuthenticated: false, userId: null, collection: [], folders: [] });
       },
       setAuth: (authenticated, userId) => set({ isAuthenticated: authenticated, userId }),
 
@@ -248,7 +380,7 @@ export const useAppStore = create<AppState>()(
         })),
     }),
     {
-      name: "dexpoke-store",
+      name: "dexvault-store",
       partialize: (state) => ({
         preferences: state.preferences,
       }),

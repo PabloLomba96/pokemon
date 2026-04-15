@@ -30,6 +30,8 @@ export interface PokemonCard {
   grading?: GradingInfo;
   specificLanguage?: string | null;
   manualPrice?: number | null;
+  isFavorite?: boolean;
+  folderId?: string | null;
   prices: {
     tcgApi: number | null;
     cardmarket: number | null;
@@ -39,6 +41,15 @@ export interface PokemonCard {
   estimatedPrice: number;
   priceChange: number;
   dateAdded: string;
+}
+
+export interface Folder {
+  id: string;
+  user_id: string;
+  name: string;
+  color: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface DbProfile {
@@ -76,4 +87,6 @@ export interface DbUserCard {
   created_at: string;
   manual_price: number | null;
   specific_language: string | null;
+  is_favorite: boolean;
+  folder_id: string | null;
 }
