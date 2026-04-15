@@ -26,7 +26,6 @@ export function ProfilePage() {
 
   const totalValue = collection.reduce((sum, c) => sum + c.estimatedPrice, 0);
 
-  // Load profile from DB
   useEffect(() => {
     if (!userId) return;
     supabase.auth.getUser().then(({ data }) => {
@@ -75,11 +74,10 @@ export function ProfilePage() {
     <div className="p-6 max-w-4xl mx-auto space-y-8">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
         <h1 className="text-2xl font-bold text-foreground mb-1">Mi Perfil</h1>
-        <p className="text-sm text-muted-foreground">Configura tu experiencia en DexPoke</p>
+        <p className="text-sm text-muted-foreground">Configura tu experiencia en DexVault</p>
       </motion.div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        {/* Account card */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
           className="gradient-card rounded-xl p-6 space-y-5 md:col-span-2"
         >
@@ -103,7 +101,6 @@ export function ProfilePage() {
           </div>
         </motion.div>
 
-        {/* Currency selector */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
           className="gradient-card rounded-xl p-6 space-y-4"
         >
@@ -113,9 +110,7 @@ export function ProfilePage() {
           </div>
           <div className="space-y-2">
             {currencies.map((c) => (
-              <button
-                key={c.code}
-                onClick={() => handleCurrencyChange(c.code)}
+              <button key={c.code} onClick={() => handleCurrencyChange(c.code)}
                 className={`w-full flex items-center justify-between px-4 py-3 rounded-lg border transition-all cursor-pointer active:scale-95 ${
                   preferences.currency === c.code
                     ? "border-primary/40 bg-primary/10 text-primary"
@@ -129,7 +124,6 @@ export function ProfilePage() {
           </div>
         </motion.div>
 
-        {/* Price engine */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
           className="gradient-card rounded-xl p-6 space-y-4"
         >
@@ -139,9 +133,7 @@ export function ProfilePage() {
           </div>
           <div className="space-y-2">
             {priceEngines.map((e) => (
-              <button
-                key={e.id}
-                onClick={() => handleEngineChange(e.id)}
+              <button key={e.id} onClick={() => handleEngineChange(e.id)}
                 className={`w-full text-left px-4 py-3 rounded-lg border transition-all cursor-pointer active:scale-95 ${
                   preferences.priceEngine === e.id
                     ? "border-neon-emerald/40 bg-neon-emerald/10"
@@ -155,7 +147,6 @@ export function ProfilePage() {
           </div>
         </motion.div>
 
-        {/* Account tier */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
           className="gradient-card rounded-xl p-6 space-y-4"
         >
@@ -183,7 +174,6 @@ export function ProfilePage() {
           </div>
         </motion.div>
 
-        {/* Save */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
           className="gradient-card rounded-xl p-6 flex items-center justify-between"
         >

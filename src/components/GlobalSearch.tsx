@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import type { PokemonCard } from "../types/cards";
 import { getFlagForLanguage } from "../constants/cards";
 import { usePokemonSearch } from "../hooks/usePokemonSearch";
+import { formatPrice } from "../lib/utils";
 import {
   CommandDialog,
   CommandEmpty,
@@ -14,6 +15,13 @@ import { Search } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import { Skeleton } from "./ui/skeleton";
 
+const regionBadge: Record<string, { label: string; className: string }> = {
+  western: { label: "W", className: "bg-blue-500/20 text-blue-400" },
+  japanese: { label: "JP", className: "bg-red-500/20 text-red-400" },
+  korean: { label: "KR", className: "bg-green-500/20 text-green-400" },
+  chinese: { label: "CN", className: "bg-yellow-500/20 text-yellow-400" },
+};
+
 interface GlobalSearchProps {
   onSelectCard: (card: PokemonCard) => void;
 }
@@ -21,12 +29,12 @@ interface GlobalSearchProps {
 export function GlobalSearch({ onSelectCard }: GlobalSearchProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const { preferences } = useAppStore();
-  const sym = preferences.currencySymbol;
-  const formatNum = (n: number) => n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  const { preferences, collection } = useAppStore();
 
   const { results: apiResults, isLoading } = usePokemonSearch(query, 300);
   const isSearching = query.trim().length >= 2;
+
+  const collectionApiIds = new Set(collection.map((c) => c.setCode + "-" + c.number));
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -54,7 +62,7 @@ export function GlobalSearch({ onSelectCard }: GlobalSearchProps) {
 
       <CommandDialog open={open} onOpenChange={setOpen}>
         <CommandInput
-          placeholder="Buscar carta por nombre (API en tiempo real)..."
+          placeholder="Buscar por nombre o número (ej: Charizard, 151, 001/165)..."
           value={query}
           onValueChange={setQuery}
         />
@@ -77,32 +85,42 @@ export function GlobalSearch({ onSelectCard }: GlobalSearchProps) {
             <CommandEmpty>No se encontraron cartas.</CommandEmpty>
           ) : (
             <CommandGroup heading={`Resultados API (${apiResults.length})`}>
-              {apiResults.slice(0, 20).map((card: PokemonCard) => (
-                <CommandItem
-                  key={card.id}
-                  value={`${card.name} ${card.set} ${card.number}`}
-                  onSelect={() => {
-                    onSelectCard(card);
-                    setOpen(false);
-                    setQuery("");
-                  }}
-                  className="cursor-pointer"
-                >
-                  <div className="flex items-center gap-3 w-full">
-                    <img src={card.image} alt={card.name} className="w-8 h-11 object-contain rounded" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold truncate">{card.name}</p>
-                      <p className="text-xs text-muted-foreground">{card.set} · {card.number}</p>
+              {apiResults.slice(0, 20).map((card: PokemonCard) => {
+                const rb = regionBadge[card.region];
+                return (
+                  <CommandItem
+                    key={card.id}
+                    value={`${card.name} ${card.set} ${card.number}`}
+                    onSelect={() => {
+                      onSelectCard(card);
+                      setOpen(false);
+                      setQuery("");
+                    }}
+                    className="cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3 w-full">
+                      <img src={card.image} alt={card.name} className="w-8 h-11 object-contain rounded" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold truncate">{card.name}</p>
+                        <p className="text-xs text-muted-foreground">{card.set} · {card.number}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px]">{getFlagForLanguage(card.language)}</span>
+                        {rb && (
+                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${rb.className}`}>
+                            {rb.label}
+                          </span>
+                        )}
+                        {card.estimatedPrice > 0 && (
+                          <span className="text-xs font-bold text-neon-gold">
+                            {formatPrice(card.estimatedPrice, preferences.currency)}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[11px]">{getFlagForLanguage(card.language)}</span>
-                      {card.estimatedPrice > 0 && (
-                        <span className="text-xs font-bold text-neon-gold">{sym}{formatNum(card.estimatedPrice)}</span>
-                      )}
-                    </div>
-                  </div>
-                </CommandItem>
-              ))}
+                  </CommandItem>
+                );
+              })}
             </CommandGroup>
           )}
         </CommandList>

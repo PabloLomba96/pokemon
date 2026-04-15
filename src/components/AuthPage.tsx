@@ -60,7 +60,7 @@ export function AuthPage({ onLogin, onGuest }: AuthPageProps) {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left panel — holographic art */}
+      {/* Left panel */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-background">
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-neon-emerald/10 to-neon-gold/15" />
@@ -92,13 +92,13 @@ export function AuthPage({ onLogin, onGuest }: AuthPageProps) {
               <Sparkles className="w-10 h-10 text-primary" />
             </div>
             <h1 className="text-4xl font-bold text-foreground mb-3">
-              Dex<span className="text-primary text-glow-purple">Poke</span>
+              Dex<span className="text-primary text-glow-purple">Vault</span>
             </h1>
             <p className="text-muted-foreground max-w-sm mx-auto leading-relaxed">
-              El centro de mandos definitivo para coleccionistas europeos de Trading Card Games
+              La bóveda definitiva para coleccionistas europeos de Trading Card Games
             </p>
             <div className="flex flex-wrap justify-center gap-2 mt-8">
-              {["Precios en tiempo real", "4 regiones TCG", "Dashboard personalizable", "Inventario experto"].map((f) => (
+              {["Precios en tiempo real", "4 regiones TCG", "Tracker de Sets", "Inventario experto"].map((f) => (
                 <span key={f} className="px-3 py-1.5 rounded-full text-xs font-medium bg-accent/60 text-muted-foreground border border-border">
                   {f}
                 </span>
@@ -127,7 +127,7 @@ export function AuthPage({ onLogin, onGuest }: AuthPageProps) {
             <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
               <Sparkles className="w-5 h-5 text-primary" />
             </div>
-            <span className="text-xl font-bold text-foreground">DexPoke</span>
+            <span className="text-xl font-bold text-foreground">Dex<span className="text-primary">Vault</span></span>
           </div>
 
           <div className="mb-8">
@@ -136,12 +136,11 @@ export function AuthPage({ onLogin, onGuest }: AuthPageProps) {
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
               {mode === "login"
-                ? "Accede a tu colección y sigue tus inversiones"
+                ? "Accede a tu bóveda y sigue tus inversiones"
                 : "Únete a la comunidad de coleccionistas TCG"}
             </p>
           </div>
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <AnimatePresence mode="wait">
               {mode === "register" && (
@@ -209,14 +208,12 @@ export function AuthPage({ onLogin, onGuest }: AuthPageProps) {
             </button>
           </form>
 
-          {/* Divider */}
           <div className="flex items-center gap-4 my-6">
             <div className="flex-1 h-px bg-border" />
             <span className="text-xs text-muted-foreground">o</span>
             <div className="flex-1 h-px bg-border" />
           </div>
 
-          {/* Guest access */}
           <button
             onClick={onGuest}
             className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl border border-border bg-accent/30 text-muted-foreground font-medium hover:bg-accent/60 hover:text-foreground transition-all cursor-pointer active:scale-95"
@@ -228,7 +225,6 @@ export function AuthPage({ onLogin, onGuest }: AuthPageProps) {
             Puedes explorar el catálogo, pero necesitarás una cuenta para guardar cartas.
           </p>
 
-          {/* Toggle mode */}
           <p className="text-center text-sm text-muted-foreground mt-6">
             {mode === "login" ? "¿No tienes cuenta?" : "¿Ya tienes cuenta?"}{" "}
             <button

@@ -9,17 +9,17 @@ function NotFoundComponent() {
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
         <h2 className="mt-4 text-xl font-semibold text-foreground">
-          Page not found
+          Página no encontrada
         </h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
+          La página que buscas no existe o ha sido movida.
         </p>
         <div className="mt-6">
           <Link
             to="/"
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Go home
+            Volver al inicio
           </Link>
         </div>
       </div>
@@ -32,13 +32,13 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "DexPoke — Tu Colección TCG" },
-      { name: "description", content: "Plataforma profesional para coleccionistas de Pokémon TCG con precios en tiempo real" },
-      { property: "og:title", content: "DexPoke — Tu Colección TCG" },
+      { title: "DexVault — Tu Bóveda TCG" },
+      { name: "description", content: "Plataforma profesional para coleccionistas de Pokémon TCG con precios en tiempo real y gestión avanzada de inventario" },
+      { property: "og:title", content: "DexVault — Tu Bóveda TCG" },
       { property: "og:description", content: "Plataforma profesional para coleccionistas de Pokémon TCG con precios en tiempo real" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:title", content: "DexPoke — Tu Colección TCG" },
+      { name: "twitter:title", content: "DexVault — Tu Bóveda TCG" },
       { name: "twitter:description", content: "Plataforma profesional para coleccionistas de Pokémon TCG con precios en tiempo real" },
     ],
     links: [

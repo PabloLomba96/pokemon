@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppSidebar } from "./AppSidebar";
 import { Dashboard } from "./Dashboard";
@@ -14,27 +14,37 @@ import { AuthPage } from "./AuthPage";
 import { ProfilePage } from "./ProfilePage";
 import { ComingSoonPage } from "./ComingSoonPage";
 import { EmptyState } from "./EmptyState";
+import { SetTracker } from "./SetTracker";
 import { useAppStore } from "../store/useAppStore";
 import type { PokemonCard, CardRegion } from "../types/cards";
 import { regions } from "../constants/cards";
-import { LayoutGrid, List, Filter } from "lucide-react";
+import { formatPrice } from "../lib/utils";
+import { LayoutGrid, List, Filter, Heart, FolderOpen, Trash2, FolderPlus, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "../integrations/supabase/client";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { Input } from "./ui/input";
 
 export function AppLayout() {
   const {
     isAuthenticated, userId, logout, setAuth,
-    collection, addCard, loadCollection, isCollectionLoading,
+    collection, addCard, removeCards, moveCardsToFolder, loadCollection, isCollectionLoading,
+    folders, loadFolders, createFolder, deleteFolder,
+    preferences,
   } = useAppStore();
   const [activeView, setActiveView] = useState("explore");
   const [selectedCard, setSelectedCard] = useState<PokemonCard | null>(null);
   const [collectionViewMode, setCollectionViewMode] = useState<"grid" | "table">("grid");
   const [collectionRegion, setCollectionRegion] = useState<CardRegion | "all">("all");
+  const [collectionFilter, setCollectionFilter] = useState<"all" | "favorites" | string>("all");
   const [showAddPanel, setShowAddPanel] = useState(false);
   const [addingCard, setAddingCard] = useState<PokemonCard | null>(null);
   const [editingCard, setEditingCard] = useState<PokemonCard | null>(null);
   const [isGuest, setIsGuest] = useState(false);
   const [authReady, setAuthReady] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showNewFolder, setShowNewFolder] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
 
   // Listen to Supabase auth state
   useEffect(() => {
@@ -58,12 +68,32 @@ export function AppLayout() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Load collection when authenticated
+  // Load collection and folders when authenticated
   useEffect(() => {
     if (isAuthenticated && userId) {
       loadCollection();
+      loadFolders();
     }
   }, [isAuthenticated, userId]);
+
+  const filteredCollection = useMemo(() => {
+    let cards = collection;
+    if (collectionRegion !== "all") {
+      cards = cards.filter((c) => c.region === collectionRegion);
+    }
+    if (collectionFilter === "favorites") {
+      cards = cards.filter((c) => c.isFavorite);
+    } else if (collectionFilter !== "all") {
+      // folder id
+      cards = cards.filter((c) => c.folderId === collectionFilter);
+    }
+    return cards;
+  }, [collection, collectionRegion, collectionFilter]);
+
+  const totalValue = useMemo(
+    () => filteredCollection.reduce((sum, c) => sum + c.estimatedPrice, 0),
+    [filteredCollection]
+  );
 
   if (!authReady) {
     return (
@@ -91,13 +121,13 @@ export function AppLayout() {
     logout();
   };
 
-  const guardedViews = ["dashboard", "collection", "profile"];
+  const guardedViews = ["dashboard", "collection", "profile", "set-tracker"];
 
   const handleNavigate = (view: string) => {
     if (guardedViews.includes(view) && isGuest) {
       toast.error("Necesitas crear una cuenta para acceder a esta sección.", {
         action: {
-          label: "Crear cuenta",
+          label: "Registrarse en DexVault",
           onClick: () => {
             setIsGuest(false);
             setAuth(false, null);
@@ -107,15 +137,12 @@ export function AppLayout() {
       return;
     }
     setActiveView(view);
+    setSelectedIds(new Set());
   };
-
-  const filteredCollection = collectionRegion === "all"
-    ? collection
-    : collection.filter((c) => c.region === collectionRegion);
 
   const handleAddFromDetail = () => {
     if (isGuest) {
-      toast.error("Regístrate para guardar esta carta.", {
+      toast.error("Regístrate en DexVault para guardar esta carta.", {
         action: {
           label: "Crear cuenta",
           onClick: () => { setIsGuest(false); setAuth(false, null); },
@@ -145,7 +172,7 @@ export function AppLayout() {
 
   const handleAddFromExplore = async (card: PokemonCard) => {
     if (isGuest) {
-      toast.error("Regístrate para guardar esta carta.", {
+      toast.error("Regístrate en DexVault para guardar esta carta.", {
         action: {
           label: "Crear cuenta",
           onClick: () => { setIsGuest(false); setAuth(false, null); },
@@ -157,6 +184,42 @@ export function AppLayout() {
       await addCard(card);
       toast.success(`${card.name} añadida a tu colección`, { description: `${card.set} — ${card.number}` });
     } catch { /* handled in store */ }
+  };
+
+  const handleToggleSelect = (cardId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(cardId)) next.delete(cardId);
+      else next.add(cardId);
+      return next;
+    });
+  };
+
+  const handleToggleSelectAll = () => {
+    if (selectedIds.size === filteredCollection.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredCollection.map((c) => c.id)));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    await removeCards(Array.from(selectedIds));
+    setSelectedIds(new Set());
+  };
+
+  const handleBulkMoveToFolder = async (folderId: string | null) => {
+    if (selectedIds.size === 0) return;
+    await moveCardsToFolder(Array.from(selectedIds), folderId);
+    setSelectedIds(new Set());
+  };
+
+  const handleCreateFolder = async () => {
+    if (!newFolderName.trim()) return;
+    await createFolder(newFolderName.trim());
+    setNewFolderName("");
+    setShowNewFolder(false);
   };
 
   const comingSoonViews = ["marketplace", "packs", "accessories", "trades"];
@@ -173,7 +236,7 @@ export function AppLayout() {
         <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">
           <div className="flex items-center justify-between px-6 h-14">
             <span className="text-sm font-semibold text-muted-foreground">
-              DexPoke {isGuest && <span className="text-xs text-primary/60 ml-1">(Invitado)</span>}
+              DexVault {isGuest && <span className="text-xs text-primary/60 ml-1">(Invitado)</span>}
             </span>
             <GlobalSearch onSelectCard={(card) => setSelectedCard(card)} />
           </div>
@@ -192,11 +255,23 @@ export function AppLayout() {
             </motion.div>
           )}
 
+          {activeView === "set-tracker" && (
+            <motion.div key="set-tracker" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <SetTracker collection={collection} />
+            </motion.div>
+          )}
+
           {activeView === "collection" && (
             <motion.div key="collection" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">
+              <header className="sticky top-14 z-30 border-b border-border bg-background/80 backdrop-blur-md">
                 <div className="flex items-center justify-between px-6 h-16">
-                  <h1 className="text-lg font-bold text-foreground">Mi Colección</h1>
+                  <div className="flex items-center gap-4">
+                    <h1 className="text-lg font-bold text-foreground">Mi Colección</h1>
+                    <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-neon-gold/10 border border-neon-gold/20">
+                      <Wallet className="w-4 h-4 text-neon-gold" />
+                      <span className="text-sm font-bold text-neon-gold">{formatPrice(totalValue, preferences.currency)}</span>
+                    </div>
+                  </div>
                   <div className="flex items-center gap-3">
                     <SearchBar onSelectCard={setSelectedCard} />
                     <div className="flex items-center border border-border rounded-lg overflow-hidden">
@@ -225,7 +300,8 @@ export function AppLayout() {
                   />
                 ) : (
                   <>
-                    <div className="flex items-center gap-2 flex-wrap mb-6">
+                    {/* Filters bar */}
+                    <div className="flex items-center gap-2 flex-wrap mb-4">
                       <Filter className="w-4 h-4 text-muted-foreground" />
                       <button onClick={() => setCollectionRegion("all")} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${collectionRegion === "all" ? "bg-primary/20 text-primary border border-primary/40" : "bg-accent text-muted-foreground border border-border hover:border-primary/20"}`}>
                         🌐 Todas
@@ -237,6 +313,62 @@ export function AppLayout() {
                       ))}
                     </div>
 
+                    {/* Folder/Favorites filter */}
+                    <div className="flex items-center gap-2 flex-wrap mb-6">
+                      <button onClick={() => setCollectionFilter("all")} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${collectionFilter === "all" ? "bg-primary/20 text-primary border border-primary/40" : "bg-accent text-muted-foreground border border-border"}`}>
+                        Todas
+                      </button>
+                      <button onClick={() => setCollectionFilter("favorites")} className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${collectionFilter === "favorites" ? "bg-red-500/20 text-red-400 border border-red-500/40" : "bg-accent text-muted-foreground border border-border"}`}>
+                        <Heart className="w-3 h-3" /> Favoritas
+                      </button>
+                      {folders.map((f) => (
+                        <button key={f.id} onClick={() => setCollectionFilter(f.id)} className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${collectionFilter === f.id ? "bg-primary/20 text-primary border border-primary/40" : "bg-accent text-muted-foreground border border-border"}`}>
+                          <FolderOpen className="w-3 h-3" style={{ color: f.color }} /> {f.name}
+                        </button>
+                      ))}
+                      <button onClick={() => setShowNewFolder(true)} className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-accent text-muted-foreground border border-border hover:border-primary/20 transition-all cursor-pointer">
+                        <FolderPlus className="w-3 h-3" /> Nueva
+                      </button>
+                    </div>
+
+                    {/* New folder form */}
+                    {showNewFolder && (
+                      <div className="flex items-center gap-2 mb-4">
+                        <Input
+                          value={newFolderName}
+                          onChange={(e) => setNewFolderName(e.target.value)}
+                          placeholder="Nombre de la carpeta"
+                          className="max-w-xs bg-accent border-border"
+                          onKeyDown={(e) => e.key === "Enter" && handleCreateFolder()}
+                        />
+                        <button onClick={handleCreateFolder} className="px-3 py-2 rounded-lg text-xs font-semibold bg-primary text-primary-foreground cursor-pointer">Crear</button>
+                        <button onClick={() => setShowNewFolder(false)} className="px-3 py-2 rounded-lg text-xs text-muted-foreground cursor-pointer">Cancelar</button>
+                      </div>
+                    )}
+
+                    {/* Bulk actions */}
+                    {collectionViewMode === "table" && selectedIds.size > 0 && (
+                      <div className="flex items-center gap-3 mb-4 px-4 py-3 rounded-lg bg-primary/10 border border-primary/20">
+                        <span className="text-sm font-semibold text-primary">{selectedIds.size} seleccionada(s)</span>
+                        <button onClick={handleBulkDelete} className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-price-down/20 text-price-down border border-price-down/30 cursor-pointer">
+                          <Trash2 className="w-3 h-3" /> Eliminar
+                        </button>
+                        {folders.length > 0 && (
+                          <Select onValueChange={(v) => handleBulkMoveToFolder(v === "none" ? null : v)}>
+                            <SelectTrigger className="w-40 h-8 text-xs bg-accent border-border">
+                              <SelectValue placeholder="Mover a carpeta..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">Sin carpeta</SelectItem>
+                              {folders.map((f) => (
+                                <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      </div>
+                    )}
+
                     {filteredCollection.length > 0 ? (
                       <AnimatePresence mode="wait">
                         {collectionViewMode === "grid" ? (
@@ -245,13 +377,20 @@ export function AppLayout() {
                           </motion.div>
                         ) : (
                           <motion.div key="table" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                            <CollectionTableView cards={filteredCollection} onSelectCard={setSelectedCard} onEditCard={setEditingCard} />
+                            <CollectionTableView
+                              cards={filteredCollection}
+                              onSelectCard={setSelectedCard}
+                              onEditCard={setEditingCard}
+                              selectedIds={selectedIds}
+                              onToggleSelect={handleToggleSelect}
+                              onToggleSelectAll={handleToggleSelectAll}
+                            />
                           </motion.div>
                         )}
                       </AnimatePresence>
                     ) : (
                       <div className="text-center py-16">
-                        <p className="text-muted-foreground">No hay cartas en esta región.</p>
+                        <p className="text-muted-foreground">No hay cartas con estos filtros.</p>
                       </div>
                     )}
                   </>
@@ -262,7 +401,7 @@ export function AppLayout() {
 
           {activeView === "search" && (
             <motion.div key="search" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">
+              <header className="sticky top-14 z-30 border-b border-border bg-background/80 backdrop-blur-md">
                 <div className="flex items-center px-6 h-16">
                   <SearchBar onSelectCard={setSelectedCard} />
                 </div>
@@ -275,7 +414,7 @@ export function AppLayout() {
 
           {activeView === "profile" && (
             <motion.div key="profile" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">
+              <header className="sticky top-14 z-30 border-b border-border bg-background/80 backdrop-blur-md">
                 <div className="flex items-center px-6 h-16">
                   <h1 className="text-lg font-bold text-foreground">Perfil & Preferencias</h1>
                 </div>
