@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      folders: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -61,9 +88,11 @@ export type Database = {
           created_at: string
           estimated_price: number
           finish: string
+          folder_id: string | null
           grade: number | null
           grading_company: string | null
           id: string
+          is_favorite: boolean
           is_graded: boolean
           language: string
           manual_price: number | null
@@ -86,9 +115,11 @@ export type Database = {
           created_at?: string
           estimated_price?: number
           finish?: string
+          folder_id?: string | null
           grade?: number | null
           grading_company?: string | null
           id?: string
+          is_favorite?: boolean
           is_graded?: boolean
           language?: string
           manual_price?: number | null
@@ -111,9 +142,11 @@ export type Database = {
           created_at?: string
           estimated_price?: number
           finish?: string
+          folder_id?: string | null
           grade?: number | null
           grading_company?: string | null
           id?: string
+          is_favorite?: boolean
           is_graded?: boolean
           language?: string
           manual_price?: number | null
@@ -123,7 +156,15 @@ export type Database = {
           specific_language?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_cards_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "folders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
